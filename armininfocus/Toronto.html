@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="shortcut icon" href="../assets/images/logo.jpg">
+  <title>ArminInFocus</title>
+  <style>
+    /* Reset & basics */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: #fdfdfd;
+      color: #111;
+      scroll-behavior: smooth;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* Navbar */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      padding: 1rem 2rem;
+      background: rgba(255 255 255 / 0.85);
+      backdrop-filter: saturate(180%) blur(10px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    nav .logo {
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: 2px;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 2rem;
+    }
+    nav ul li {
+      font-weight: 500;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0.2rem 0;
+      position: relative;
+    }
+    nav ul li::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0%;
+      height: 2px;
+      background: #111;
+      transition: width 0.3s ease;
+    }
+    nav ul li:hover::after {
+      width: 100%;
+    }
+
+    /* Hero */
+    header {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 2rem;
+      text-align: center;
+      background: url('../assets/shots/CN\ Tower\ 5.jpeg') no-repeat center center / cover;
+      color: #111;
+      overflow: hidden;
+    }
+
+    header h1 {
+      font-size: clamp(2.5rem, 8vw, 6rem);
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      margin: 0;
+      line-height: 1.1;
+      color: #111;
+      user-select: none;
+    }
+    header p {
+      margin-top: 1rem;
+      font-weight: 400;
+      font-size: clamp(1rem, 2vw, 1.5rem);
+      color: #555;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      user-select: none;
+    }
+    header .scroll-down {
+      margin-top: 1rem;
+      font-size: 1.5rem;
+      color: #787878;
+      animation: bounce 2.5s infinite;
+      cursor: pointer;
+      user-select: none;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0);}
+      50% { transform: translateY(15px);}
+    }
+
+    /* Sections */
+    section {
+      padding: 3rem 2rem 0rem;
+      max-width: 1000px;
+      margin: auto auto;
+    }
+    section h2 {
+      font-weight: 800;
+      font-size: 2.5rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 2rem;
+      text-align: center;
+      user-select: none;
+    }
+
+    /* Portfolio grid */
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+      gap: 2rem;
+    }
+    .portfolio-item {
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      border-radius: 0px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      background: #fafafa;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      margin: 0; /* Add this if needed */
+     padding: 0;
+    }
+    .portfolio-item img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.5s ease;
+      user-select: none;
+      margin: 0;
+    }
+    .portfolio-item:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.15);
+    }
+    .portfolio-item:hover img {
+      transform: scale(1.1);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      font-weight: 400;
+      font-size: 0.9rem;
+      color: #999;
+      user-select: none;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 480px) {
+      nav ul {
+        gap: 1rem;
+      }
+      header h1 {
+        font-size: 3rem;
+      }
+      header p {
+        font-size: 1rem;
+      }
+    }
+
+
+    .portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-auto-rows: 200px;
+  gap: 1.5rem;
+  gap: 0.3rem;  /* Repeat your small gap here */
+}
+
+.portfolio-item {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border-radius: 0px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.portfolio-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s ease;
+  user-select: none;
+}
+
+.portfolio-item:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.15);
+}
+
+.portfolio-item:hover img {
+  transform: scale(1.1);
+}
+
+/* Grid spans */
+.span-2x2 {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.span-2x1 {
+  grid-column: span 2;
+  grid-row: span 1;
+}
+.span-1x2 {
+  grid-column: span 1;
+  grid-row: span 2;
+}
+.span-1x1 {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+
+/* Responsive: smaller rows and columns on mobile */
+@media (max-width: 600px) {
+  .portfolio-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-auto-rows: 140px;
+  }
+}
+
+.lightbox {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.lightbox.show {
+  visibility: visible;
+  opacity: 1;
+}
+
+.lightbox img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  box-shadow: 0 0 20px rgba(255,255,255,0.2);
+  border-radius: 0;
+  user-select: none;
+  cursor: zoom-out;
+}
+
+.header-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.01); /* white with 70% opacity */
+  z-index: 1;
+}
+
+.header-content {
+  position: relative;
+  z-index: 2;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.lightbox.show {
+  visibility: visible;
+  opacity: 1;
+}
+
+.lightbox-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.lightbox-content img {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 0;
+  user-select: none;
+  cursor: zoom-out;
+}
+
+.lightbox-caption {
+  margin-top: 1rem;
+  color: #eee;
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.4;
+  max-width: 80vw;
+}
+
+
+
+
+
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo"><a href="https://arminpan.github.io/armininfocus.html" target="_blank">ArminInFocus</a></div>
+    <ul>
+      <li><a href="https://www.instagram.com/armininfocus" target="_blank">Contact</a></li>
+    </ul>
+  </nav>
+
+  <header>
+    <div class="header-overlay"></div>
+    <div class="header-content">
+      <h1 style="color: #626262; font-size: 50px; ">Toronto</h1>
+      <div class="scroll-down" onclick="document.getElementById('portfolio').scrollIntoView({behavior: 'smooth'})">↓</div>
+    </div>
+  </header>
+  
+
+  <section id="portfolio">
+    <div class="portfolio-grid">
+      <div class="portfolio-item span-2x2"><img src="../assets/shots/CN Tower 1.jpeg" data-caption="Rushing to Union Station to catch a bus! - CN Tower, Toronto" /></div>
+      <div class="portfolio-item span-1x2"><img src="../assets/shots/CN Tower 4.jpeg" data-caption="Downtown walk with Qmars before having a great lamb leg! - CN Tower, Toronto" /></div>
+      <div class="portfolio-item span-1x2"><img src="../assets/shots/Toronto3.jpeg" data-caption="Chilling with Qmars! - Billy Bishop Airport, Toronto" /></div>
+      <div class="portfolio-item span-1x2"><img src="../assets/shots/CN Tower 6.jpeg" data-caption="Skylines! - Toronto" /></div>
+      <div class="portfolio-item span-1x2"><img src="../assets/shots/Toronto1.jpeg" data-caption="Sketchy stairs in a parking lot! - Kensington Market, Toronto" /></div>
+      <div class="portfolio-item span-1x2"><img src="../assets/shots/Toronto5.jpeg" data-caption="This could totally be a Samsung Ad! - Dundas Square, Toronto" /></div>
+      <div class="portfolio-item span-1x1"><img src="../assets/shots/CN Tower 2.jpeg" data-caption="Shot taken from King's College Circle in an evening tour of UofT with ParPar - CN Tower, Toronto" /></div>
+      <div class="portfolio-item span-1x1"><img src="../assets/shots/CN Tower 3.jpeg" data-caption="Almost Happy 2025, shot taken from the REBEL's patio! - Toronto" /></div>
+      
+      <div class="portfolio-item span-2x2"><img src="../assets/shots/Toronto6.jpeg" data-caption="Downtown walk with Khaleh for the very first time! - Toronto" /></div>
+      <div class="portfolio-item span-1x2"><img src="../assets/shots/Toronto7.jpeg" data-caption="Downtown walk with Khaleh for the very first time! - Toronto" /></div>
+      <div class="portfolio-item span-1x2"><img src="../assets/shots/Toronto4.jpeg" data-caption="Still downtown walk with Khaleh for the very first time :0 - Toronto" /></div>
+
+      <div class="portfolio-item span-2x1"><img src="../assets/shots/Toronto2.jpeg" data-caption="Parking lot under construction and the graffities! - Kensington Market, Toronto" /></div>
+      <div class="portfolio-item span-2x1"><img src="../assets/shots/Toronto8.jpeg" data-caption="Trying to capture the calm in chaos! - Toronto" /></div>
+
+    </div>
+  </section>
+
+  
+
+  <!-- <section id="contact">
+    <h2>Contact</h2>
+    <p style="max-width: 700px; margin: 0 auto; font-weight: 300; font-size: 1.1rem; line-height: 1.6; user-select: none; padding: 0;">
+      Want to get in touch? Email me at <a href="mailto:hello@example.com">hello@example.com</a>.
+    </p>
+  </section> -->
+
+  <!-- Lightbox Modal -->
+  <div id="lightbox" class="lightbox">
+    <div class="lightbox-content">
+      <img id="lightbox-img" src="" alt="Full Image">
+      <div id="lightbox-caption" class="lightbox-caption"></div>
+    </div>
+  </div>
+
+  <footer>
+    &copy; <a href="https://arminpan.github.io/" target="_blank">Armin Panjehpour</a>
+  </footer>
+
+
+  <script>
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxCaption = document.getElementById('lightbox-caption');
+  
+    document.querySelectorAll('.portfolio-item img').forEach(img => {
+      img.addEventListener('click', () => {
+        lightbox.classList.add('show');
+        lightboxImg.src = img.src;
+        lightboxImg.alt = img.alt || '';
+        lightboxCaption.textContent = img.dataset.caption || img.alt || '';
+      });
+    });
+  
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox || e.target === lightboxImg) {
+        lightbox.classList.remove('show');
+      }
+    });
+  
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        lightbox.classList.remove('show');
+      }
+    });
+  </script>
+  
+  
+
+</body>
+</html>
