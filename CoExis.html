@@ -76,7 +76,7 @@
       justify-content: center;
       padding: 0 2rem;
       text-align: center;
-      background: url('assets/shots/Naqsh-e\ Jahan\ Square.jpg') no-repeat center center / cover;
+      background: url('assets/shots/Companion13.jpeg') no-repeat center center / cover;
       color: #111;
       overflow: hidden;
     }
@@ -197,8 +197,10 @@
 .portfolio-item {
   position: relative;
   overflow: hidden;
-  border-radius: 10px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  border-radius: 0px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .portfolio-item img {
@@ -206,23 +208,8 @@
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-.portfolio-item .overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4); /* black overlay with transparency */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  pointer-events: none; /* So the image link still works */
-}
-
-.overlay-text {
-  color: #fff;
-  font-size: 1.2rem;
-  font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  transition: transform 0.5s ease;
+  user-select: none;
 }
 
 .portfolio-item:hover {
@@ -367,151 +354,28 @@
   <header>
     <div class="header-overlay"></div>
     <div class="header-content">
-      <h1 style="color: #626262; font-size: 50px; ">Eyes talking...</h1>
+      <h1 style="color: #ffffff; font-size: 50px; ">Eyes talking...</h1>
       <div class="scroll-down" onclick="document.getElementById('portfolio').scrollIntoView({behavior: 'smooth'})">↓</div>
     </div>
   </header>
   
-  <!-- section1 -->
+
+
   <section id="portfolio">
     <div class="portfolio-grid">
-      
-      <div class="portfolio-item span-1x2">
-        <a href="https://arminpan.github.io/naqsh-e jahan.html" target="_blank">
-          <img src="assets/shots/Naqsh-e Jahan Square8.jpeg"/>
-          <div class="overlay">
-            <span class="overlay-text">Naqsh-e Jahan</span>
-          </div>
-        </a>
-      </div>
+      <div class="portfolio-item span-1x2"><img src="assets/shots/Companion1.jpeg" data-caption="It's all about company... - Downtown Toronto" /></div>
+      <div class="portfolio-item span-1x2"><img src="assets/shots/Companion4.jpeg" data-caption="Shadows+good company! - Haji Sophia Mosque, Istanbul" /></div>
+      <div class="portfolio-item span-2x1"><img src="assets/shots/Companion2.jpeg" data-caption="Cute couple in subway! - Toronto" /></div>
+      <div class="portfolio-item span-2x1"><img src="assets/shots/Companion3.jpeg" data-caption="Cute couple on the way to Distillery District! - Toronto" /></div>
+      <div class="portfolio-item span-1x1"><img src="assets/shots/Companion5.jpeg" data-caption="Waiting for my flight at YYZ, and people saying goodbye to their loved ones! - YYZ" /></div>
+      <div class="portfolio-item span-1x2"><img src="assets/shots/Companion6.jpeg" data-caption="Get yourself that one friend who sticks around till the end! - Toronto" /></div>
+      <div class="portfolio-item span-1x2"><img src="assets/shots/Companion7.jpeg" data-caption="Parents watching their kids playing at the beach! - Caspian sea" /></div>
+      <div class="portfolio-item span-1x2"><img src="assets/shots/Companion8.jpeg" data-caption="Love! - Killarney, ON" /></div>
+      <div class="portfolio-item span-1x2"><img src="assets/shots/Companion9.jpeg" data-caption="Canada Day! - London, ON" /></div>
+      <div class="portfolio-item span-2x1"><img src="assets/shots/Companion10.jpeg" data-caption="Favourite shots: capturing other people doing photography! - Toronto, ON" /></div>
+      <div class="portfolio-item span-1x1"><img src="assets/shots/Companion11.jpeg" data-caption="Cute little boys playing with the pigeons! - Toronto, ON" /></div>
+      <div class="portfolio-item span-1x1"><img src="assets/shots/Companion12.jpeg" data-caption="Fathers! - Toronto, ON" /></div>
 
-
-      <div class="portfolio-item span-1x2">
-          <a href="https://arminpan.github.io/toronto.html" target="_blank">
-            <img src="assets/shots/CN Tower 4.jpeg"/>
-            <div class="overlay">
-              <span class="overlay-text">Toronto</span>
-            </div>
-          </a>
-        </div>
-
-
-        <div class="portfolio-item span-1x1">
-          <a href="https://arminpan.github.io/armininfocus/panamacity.html" target="_blank">
-            <img src="assets/shots/Panama7.jpeg"/>
-            <div class="overlay">
-              <span class="overlay-text">Panama City</span>
-            </div>
-          </a>
-        </div>
-
-
-        <div class="portfolio-item span-1x1">
-          <a href="https://arminpan.github.io/armininfocus/company.html" target="_blank">
-            <img src="assets/shots/Companion2.jpeg"/>
-            <div class="overlay">
-              <span class="overlay-text">Coexistence</span>
-            </div>
-          </a>
-        </div>
-
-        <div class="portfolio-item span-1x1">
-          <a href="https://arminpan.github.io/armininfocus/cats.html" target="_blank">
-            <img src="assets/shots/Cats4.jpeg"/>
-            <div class="overlay">
-              <span class="overlay-text">Cats</span>
-            </div>
-          </a>
-        </div>
-
-
-        <div class="portfolio-item span-1x1">
-          <a href="https://arminpan.github.io/armininfocus/skies.html" target="_blank">
-            <img src="assets/shots/Skies4.jpeg"/>
-            <div class="overlay">
-              <span class="overlay-text">Skies</span>
-            </div>
-          </a>
-        </div>
-
-        <div class="portfolio-item span-1x2">
-          <a href="https://arminpan.github.io/armininfocus/iran.html" target="_blank">
-            <img src="assets/shots/Iran1.jpeg"/>
-            <div class="overlay">
-              <span class="overlay-text">IRAN</span>
-            </div>
-          </a>
-        </div>
-
-        <div class="portfolio-item span-1x2">
-          <a href="https://arminpan.github.io/armininfocus/skies.html" target="_blank">
-            <img src="assets/shots/Istanbul1.jpeg"/>
-            <div class="overlay">
-              <span class="overlay-text">Istanbul</span>
-            </div>
-          </a>
-        </div>
-
-        
-        
-
-        <div class="portfolio-item span-2x1">
-          <a href="https://arminpan.github.io/armininfocus/skies.html" target="_blank">
-            <img src="assets/shots/Montreal1.jpeg"/>
-            <div class="overlay">
-              <span class="overlay-text">Montreal</span>
-            </div>
-          </a>
-        </div>
-
-
-
-        <div class="portfolio-item span-2x1">
-          <a href="https://arminpan.github.io/armininfocus/caspiansea.html" target="_blank">
-            <img src="assets/shots/CaspianSea2.jpeg"/>
-            <div class="overlay">
-              <span class="overlay-text">Caspian Sea</span>
-            </div>
-          </a>
-        </div>
-      
-    </div>
-  </section>
-
-  <!-- section2 -->
-  <section id="portfolio">
-    <div class="portfolio-grid">
-
-        <div class="portfolio-item span-1x2">
-          <a href="https://arminpan.github.io/armininfocus/skies.html" target="_blank">
-            <img src="assets/shots/NiagaraFalls1.jpeg"/>
-            <div class="overlay">
-              <span class="overlay-text">Niagara Falls</span>
-            </div>
-          </a>
-        </div>
-    
-
-        <div class="portfolio-item span-1x2">
-          <a href="https://arminpan.github.io/armininfocus/mothernature.html" target="_blank">
-            <img src="assets/shots/Mother Nature1.jpeg"/>
-            <div class="overlay">
-              <span class="overlay-text">Mother Nature</span>
-            </div>
-          </a>
-        </div>
-
-        <div class="portfolio-item span-1x2">
-          <a href="https://arminpan.github.io/armininfocus/random.html" target="_blank">
-            <img src="assets/shots/Random1.jpeg"/>
-            <div class="overlay">
-              <span class="overlay-text">Random</span>
-            </div>
-          </a>
-        </div>
-
-      
-  
     </div>
   </section>
   
@@ -523,12 +387,45 @@
     </p>
   </section> -->
 
+  <!-- Lightbox Modal -->
+  <div id="lightbox" class="lightbox">
+    <div class="lightbox-content">
+      <img id="lightbox-img" src="" alt="Full Image">
+      <div id="lightbox-caption" class="lightbox-caption"></div>
+    </div>
+  </div>
+
   <footer>
     &copy; <a href="https://arminpan.github.io/" target="_blank">Armin Panjehpour</a>
   </footer>
 
 
-
+  <script>
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxCaption = document.getElementById('lightbox-caption');
+  
+    document.querySelectorAll('.portfolio-item img').forEach(img => {
+      img.addEventListener('click', () => {
+        lightbox.classList.add('show');
+        lightboxImg.src = img.src;
+        lightboxImg.alt = img.alt || '';
+        lightboxCaption.textContent = img.dataset.caption || img.alt || '';
+      });
+    });
+  
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox || e.target === lightboxImg) {
+        lightbox.classList.remove('show');
+      }
+    });
+  
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        lightbox.classList.remove('show');
+      }
+    });
+  </script>
   
   
 
