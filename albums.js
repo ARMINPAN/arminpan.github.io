@@ -65,7 +65,7 @@ const ALBUMS = [
   {
     slug: "toronto", title: "Toronto",
     location: "Ontario, Canada", mood: "steel",
-    caption: "Glass, steel, and a lake that keeps quiet about it.",
+    caption: "Glass, steel, and a lake.",
     files: ["CN Tower 1","CN Tower 4","Toronto3","CN Tower 6","Toronto1","Toronto5","CN Tower 2","CN Tower 3","Toronto6","Toronto7","Toronto4","Toronto2","Toronto8"]
   },
   {
@@ -77,13 +77,13 @@ const ALBUMS = [
   {
     slug: "co-existence", title: "Co-existence",
     location: "Various", mood: "amber",
-    caption: "Small truces between species, caught mid-negotiation.",
+    caption: "The rightests moments.",
     files: ["Companion1","Companion4","Companion2","Companion3","Companion5","Companion6","Companion7","Companion8","Companion9","Companion10","Companion11","Companion12","Companion14","Companion15"]
   },
   {
     slug: "cats", title: "Cats",
     location: "Various", mood: "honey",
-    caption: "Studies in supreme indifference.",
+    caption: "Studies in supreme cuteness.",
     files: ["Cats1","Cats2","Cats3","Cats4b","Cats5","Cats6","Cats7","Cats11","Cats9","Cats10","Cats12","Cats8"]
   },
   {
@@ -96,19 +96,19 @@ const ALBUMS = [
   {
     slug: "iran", title: "Iran",
     location: "Iran", mood: "saffron",
-    caption: "Home, in the season it looks best.",
+    caption: "Home.",
     files: ["Iran3","Iran4","Iran7","Iran6","Iran8","Iran9","Iran10","Iran16","Iran11","Iran12","Iran13","Iran14","Iran15","Iran17"]
   },
   {
     slug: "istanbul", title: "Istanbul",
     location: "Türkiye", mood: "lagoon",
-    caption: "Two continents sharing one long exhale.",
+    caption: "Lovely Istanbul.",
     files: ["Istanbul1","Istanbul4","Istanbul3","Istanbul5","Istanbul6","Istanbul7","Istanbul8","Istanbul9","Istanbul10","Istanbul11","Istanbul12","Istanbul13","Istanbul14","Istanbul15","Istanbul16","Istanbul17","Istanbul18","Istanbul19","Istanbul20","Istanbul21","Istanbul22","Istanbul23","Istanbul24"]
   },
   {
     slug: "montreal", title: "Montreal",
     location: "Quebec, Canada", mood: "brick",
-    caption: "Brick, snowlight, and a language for every block.",
+    caption: "Brick, snow, art, and a language for every block.",
     files: ["Montreal1","Montreal3","Montreal6","Montreal4","Montreal5","Montreal7","Montreal8","Montreal9","Montreal10","Montreal11","Montreal12","Montreal13","Montreal14"]
   },
   {
@@ -120,7 +120,7 @@ const ALBUMS = [
   {
     slug: "niagara-falls", title: "Niagara Falls",
     location: "Ontario, Canada", mood: "mist",
-    caption: "Water that never finishes the sentence.",
+    caption: "Ontario's Majestic.",
     files: ["NiagaraFalls1","NiagaraFalls2","NiagaraFalls3","NiagaraFalls4"]
   }
 

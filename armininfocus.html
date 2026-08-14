@@ -157,6 +157,9 @@
   }
   .scroll-cue .line{ width:1px; height:46px; background:linear-gradient(#fff, transparent); animation: pulse-line 2.2s ease-in-out infinite; }
   @keyframes pulse-line{ 0%,100%{ opacity:.35 } 50%{ opacity:1 } }
+  @media (max-width: 640px){
+    .scroll-cue{ display:none; } /* hero copy can wrap tall enough on phones to run into it */
+  }
 
   /* ---------- LIGHT TABLE (bento album grid) ---------- */
   #view-index{ padding: 40px clamp(20px,5vw,56px) 120px; }
