@@ -161,12 +161,11 @@
     .scroll-cue{ display:none; } /* hero copy can wrap tall enough on phones to run into it */
   }
 
-  /* ---------- LIGHT TABLE (bento album grid) ---------- */
-  #view-index{ padding: 40px clamp(20px,5vw,56px) 120px; }
+  /* ---------- DARKROOM WIRE (rolls hung to dry beneath the header) ---------- */
+  #view-index{ padding: 10px clamp(20px,5vw,56px) 120px; }
   .index-head{
     display:flex; justify-content:space-between; align-items:flex-end;
-    margin-bottom: 36px; gap:20px; flex-wrap:wrap;
-    border-bottom:1px solid var(--line); padding-bottom:20px;
+    margin: 42px 0 0; gap:20px; flex-wrap:wrap;
   }
   .index-head h2{
     font-family:'Fraunces', serif; font-weight:400; font-size: clamp(26px,3.4vw,38px); margin:0;
@@ -175,103 +174,172 @@
   }
   .index-head .eyebrow{ text-align:right; }
 
-  /* 12-col dense bento grid — each tile's span + aspect-ratio is assigned
-     in JS from the photo's own natural orientation, so nothing here is a
-     fixed repeating pattern and tiles are never forced to match sizes */
-  .grid{
-    display:grid;
-    grid-template-columns: repeat(12, 1fr);
-    grid-auto-flow: dense;
-    gap: 10px;
-    max-width: 1400px;
-    margin: 0 auto;
+  /* every roll's print size, thread length and sway is derived from its own
+     slug (see hangProfile in the script below) — stable across reloads,
+     never a fixed repeating pattern, and needs no manual tuning when a
+     roll is added or removed from albums.js. Rolls are chunked into rows
+     (see rollsPerRow) so a large collection wraps to more lines instead
+     of scrolling off the side. */
+  .wire-rows{
+    max-width: 1400px; margin: 0 auto;
+    display:flex; flex-direction:column; gap: 76px;
   }
-  .tile{
+  .wire{
     position:relative;
-    grid-column: span 4;
-    aspect-ratio: 1/1;
+    display:flex; align-items:flex-start; flex-wrap:wrap; gap: 44px 40px;
+    padding-top: 1px;
+  }
+  .wire::before{
+    content:'';
+    position:absolute; left:0; right:0; top:0; height:1px;
+    background: linear-gradient(90deg, transparent, var(--line) 4%, var(--line) 96%, transparent);
+  }
+
+  .strand{
+    position:relative;
+    display:flex; flex-direction:column; align-items:center;
+    flex:none; cursor:pointer;
+    opacity:0; transform: translateY(-16px);
+    transition: opacity .6s var(--ease), transform .7s cubic-bezier(.22,1.4,.36,1);
+  }
+  .strand.in{ opacity:1; transform:none; }
+  .strand:hover{ z-index:5; }
+
+  /* the sway animation lives on its own inner wrapper so it doesn't fight
+     the reveal transition — both would otherwise drive `transform` on the
+     same element */
+  .swing{
+    display:flex; flex-direction:column; align-items:center;
+    animation: strand-sway 7s ease-in-out infinite;
+    animation-delay: calc(var(--i) * -0.6s);
+    transform-origin: top center;
+  }
+  @keyframes strand-sway{
+    0%,100%{ transform: rotate(-.6deg); }
+    50%{ transform: rotate(.6deg); }
+  }
+
+  .swing svg{ display:block; overflow:visible; }
+  .swing svg path{
+    fill:none; stroke: var(--ink-faint); stroke-width:1.5; stroke-linecap:round;
+    transition: stroke .4s var(--ease), filter .4s var(--ease);
+  }
+  .strand:hover .swing svg path{
+    stroke: var(--glow, var(--accent));
+    filter: drop-shadow(0 0 6px var(--glow-soft, var(--accent-soft)));
+  }
+  .pin{
+    position:absolute; left:50%; top:-2px; width:4px; height:4px;
+    background: var(--ink-faint); border-radius:50%;
+    transform:translate(-50%,-50%);
+    transition: background .4s var(--ease);
+  }
+  .strand:hover .pin{ background: var(--glow, var(--accent)); }
+
+  .clip{
+    width:26px; height:9px; margin-bottom:-2px;
+    background: linear-gradient(180deg, #2a2436, #17131f);
+    border-radius:2px 2px 3px 3px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.5);
+    position:relative; z-index:2;
+  }
+
+  .photo{
+    border-radius: 3px;
     overflow:hidden;
-    cursor:pointer;
     background:#150f22;
-    border-radius: var(--radius);
     border: 1px solid var(--line);
-    opacity:0;
-    transform: translateY(-30px) scale(.94) rotate(-1deg);
-    transition: opacity .6s var(--ease), transform .7s cubic-bezier(.22,1.4,.36,1),
-                box-shadow .4s ease, border-color .4s ease;
+    box-shadow: 0 10px 26px -14px rgba(0,0,0,.7);
+    transition: transform .5s cubic-bezier(.22,1.4,.36,1), box-shadow .4s ease, border-color .4s ease;
   }
-  .tile.in{ opacity:1; transform:none; }
-  .tile:hover{
-    transform: translateY(-8px) scale(1.015);
-    box-shadow: 0 30px 70px -22px var(--glow-soft, var(--accent-soft)), 0 0 0 1px var(--glow, var(--accent));
+  .strand:hover .photo{
+    transform: translateY(-3px) scale(1.045);
+    box-shadow: 0 22px 46px -18px var(--glow-soft, var(--accent-soft)), 0 0 0 1px var(--glow, var(--accent));
     border-color: transparent;
-    z-index: 2;
   }
-  .tile.t-wide{ grid-column: span 4; aspect-ratio: 16/9; }
-  .tile.t-land{ grid-column: span 4; aspect-ratio: 4/3; }
-  .tile.t-sq  { grid-column: span 3; aspect-ratio: 1/1; }
-  .tile.t-port{ grid-column: span 3; aspect-ratio: 3/4; }
-  .tile.t-tall{ grid-column: span 2; aspect-ratio: 2/3; }
-  .tile{ max-height: 340px; }
-  @media (max-width: 900px){
-    .grid{ grid-template-columns: repeat(2,1fr); gap:8px; }
-    .tile, .tile.t-wide, .tile.t-land, .tile.t-sq, .tile.t-port, .tile.t-tall{
-      grid-column: span 2; aspect-ratio: 4/3; max-height:none;
-    }
-  }
-
-  .tile-wash{
-    position:absolute; inset:0; z-index:1; pointer-events:none;
-    opacity:0; transition: opacity .5s var(--ease);
-    mix-blend-mode: screen;
-    background: radial-gradient(circle at 26% 18%, rgba(var(--glow-rgb, var(--grade-a)),.6), transparent 62%);
-  }
-  .tile:hover .tile-wash{ opacity:1; }
-
-  .tile img{
+  .photo img{
     width:100%; height:100%; object-fit:cover;
     display:block;
     filter: saturate(1.08) contrast(1.03);
-    transform: scale(1.03);
     transition: filter .6s var(--ease), transform 1.1s var(--ease);
   }
-  .tile:hover img{
+  .strand:hover .photo img{
     filter: saturate(1.25) contrast(1.06) brightness(1.03);
-    transform: scale(1.1) rotate(-.4deg);
+    transform: scale(1.08);
   }
-  .tile::after{
-    content:'';
-    position:absolute; inset:0; z-index:1;
-    background: linear-gradient(180deg, transparent 42%, rgba(6,4,12,.86) 100%);
-    pointer-events:none;
+
+  .cap{
+    margin-top:14px; text-align:center; max-width: 100%;
   }
-  .tile-meta{
-    position:absolute; left:0; right:0; bottom:0; z-index:2;
-    padding: 16px 18px;
-    display:flex; justify-content:space-between; align-items:flex-end; gap:10px;
+  .cap .num{
+    font-family:'IBM Plex Mono', monospace; font-size:10px;
+    color: var(--glow, var(--accent)); letter-spacing:.1em; display:block; margin-bottom:5px;
+    transition: color .4s var(--ease);
   }
-  .tile-num{
-    position:absolute; top:14px; left:14px; z-index:2;
-    font-family:'IBM Plex Mono', monospace; font-size:10px; font-weight:500; color:#0a0a0b;
-    letter-spacing:.08em;
-    background: #ffffffe6;
-    padding: 4px 9px; border-radius: 20px;
-    box-shadow: none;
-    transition: background .4s ease, box-shadow .4s ease;
+  .cap .title{
+    font-family:'Fraunces', serif; font-style:italic; font-size: clamp(16px,1.6vw,20px);
+    color:#fff; line-height:1.1; display:block;
   }
-  .tile:hover .tile-num{
-    background: var(--glow, var(--accent));
-    box-shadow: 0 6px 16px -4px var(--glow-soft, var(--accent-soft));
+  .cap .caption{
+    font-size:12px; color:var(--ink-dim); line-height:1.4;
+    margin-top:6px; display:block;
   }
-  .tile-title{
-    font-family:'Fraunces', serif; font-size: clamp(19px,2vw,26px); color:#fff; line-height:1.05;
+
+  /* ---------- LESSON PATH (phone — rolls strung one to the next,
+     Duolingo-style, since a hanging wire has no room to breathe this
+     narrow) ---------- */
+  .path{
+    display:none;
+    max-width: 420px; margin: 0 auto;
+    flex-direction:column; align-items:center;
+    padding: 4px 0 12px;
   }
-  .tile-count{
-    font-family:'IBM Plex Mono', monospace; font-size:10px; color:#fff; opacity:.75;
-    white-space:nowrap; padding-bottom:3px;
+  .stop{
+    margin-top: 56px;
+    opacity:0; transform: translateY(14px);
+    transition: opacity .6s var(--ease), transform .6s cubic-bezier(.22,1.4,.36,1);
   }
-  .tile-caption{
-    font-size:12px; color:#ffffffb5; margin-top:6px; max-width:38ch; line-height:1.4;
+  .stop:first-child{ margin-top:0; }
+  .stop.in{ opacity:1; transform:none; }
+
+  .stop-inner{
+    position:relative;
+    display:flex; flex-direction:column; align-items:center;
+    cursor:pointer;
+  }
+  .connector{
+    position:absolute; left:50%; top:-56px;
+    width:300px; height:56px;
+    transform: translateX(-50%);
+    overflow:visible; pointer-events:none;
+  }
+  .connector path{
+    fill:none; stroke: var(--glow, var(--ink-faint)); stroke-width:2;
+    stroke-linecap:round; stroke-dasharray: 1 10;
+    opacity:.55;
+    transition: opacity .4s var(--ease);
+  }
+  .stop-inner:hover .connector path, .stop-inner:active .connector path{ opacity:1; }
+
+  .node{
+    width:96px; height:96px; border-radius:50%;
+    overflow:hidden; position:relative;
+    border: 3px solid var(--glow, var(--line));
+    box-shadow: 0 16px 32px -16px rgba(0,0,0,.7), 0 0 0 5px var(--glow-soft, transparent);
+    transition: transform .3s cubic-bezier(.22,1.4,.36,1), box-shadow .35s var(--ease);
+  }
+  .stop-inner:hover .node, .stop-inner:active .node{
+    transform: scale(1.06);
+    box-shadow: 0 20px 40px -16px var(--glow-soft, var(--accent-soft)), 0 0 0 7px var(--glow-soft, var(--accent-soft));
+  }
+  .node img{
+    width:100%; height:100%; object-fit:cover;
+    filter: saturate(1.1) contrast(1.03);
+  }
+
+  @media (max-width: 680px){
+    .wire-rows{ display:none; }
+    .path{ display:flex; }
   }
 
   /* ---------- ALBUM VIEW ---------- */
@@ -367,11 +435,12 @@
 </section>
 
 <main id="view-index">
+  <div class="wire-rows" id="wire-rows"></div>
+  <div class="path" id="path"></div>
   <div class="index-head">
     <h2>The rolls</h2>
     <div class="eyebrow" id="roll-count">11 rolls — 136 frames</div>
   </div>
-  <div class="grid" id="grid"></div>
 </main>
 
 <section id="view-album">
@@ -534,23 +603,39 @@ function makeImg(src, alt){
   return img;
 }
 
-// buckets a photo's own aspect ratio into a bento span/shape — this is
-// what makes tile size follow the actual image instead of a canned pattern
-function orientationClass(ratio){
-  if(ratio >= 1.65) return "t-wide";
-  if(ratio >= 1.12) return "t-land";
-  if(ratio >= 0.88) return "t-sq";
-  if(ratio >= 0.62) return "t-port";
-  return "t-tall";
+// deterministic pseudo-random per roll (seeded by slug) — stable across
+// reloads/reorders, so each roll's hang profile doesn't need hand-tuning
+function seedFromString(str){
+  let h = 2166136261;
+  for(let i=0; i<str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
 }
-function sizeToImage(tile, img){
-  const apply = () => {
-    if(!img.naturalWidth || !img.naturalHeight) return;
-    tile.classList.remove("t-wide","t-land","t-sq","t-port","t-tall");
-    tile.classList.add(orientationClass(img.naturalWidth / img.naturalHeight));
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
-  if(img.complete && img.naturalWidth) apply();
-  else img.addEventListener("load", apply, { once:true });
+}
+const HANG_SHAPES = [
+  { ratio:1    },
+  { ratio:.78  },
+  { ratio:.6   },
+  { ratio:1.7  },
+  { ratio:2.3  },
+  { ratio:.85  }
+];
+
+// a roll's aspect ratio and thread character are fixed by its slug — its
+// actual pixel size is decided later, per row, by the justified-fill layout
+function hangProfile(slug){
+  const rand = mulberry32(seedFromString(slug));
+  const shape = HANG_SHAPES[Math.floor(rand() * HANG_SHAPES.length)];
+  const ratio = shape.ratio * (.85 + rand() * .3);
+  const threadFactor = .18 + rand() * .55;
+  const swayFactor = (rand() * 2 - 1) * .22;
+  return { ratio, threadFactor, swayFactor };
 }
 
 /* ---------- drop-in reveal on scroll ---------- */
@@ -577,39 +662,182 @@ function wireHoverGrade(el, img, fallback){
   el.addEventListener("mouseleave", () => setGrade(fallback()));
 }
 
-const grid = document.getElementById("grid");
+const wireRowsEl = document.getElementById("wire-rows");
+const pathEl = document.getElementById("path");
+const svgNS = "http://www.w3.org/2000/svg";
+const MOBILE_BREAKPOINT = 680;
 
-ALBUMS.forEach((album, i) => {
-  const tile = document.createElement("div");
-  tile.className = "tile t-sq";
-  tile.onclick = () => openAlbum(album.slug);
-  applyGlow(tile, album.grade);
+function buildStrand(container, album, hang, w, h, i){
+  const threadH = Math.max(18, Math.round(hang.threadFactor * h));
+  const sway = Math.round(hang.swayFactor * h);
+
+  const strand = document.createElement("div");
+  strand.className = "strand";
+  strand.style.width = w + "px";
+  strand.style.setProperty("--i", i);
+  strand.onclick = () => openAlbum(album.slug);
+  applyGlow(strand, album.grade);
+
+  const swing = document.createElement("div");
+  swing.className = "swing";
+
+  const cx = w / 2;
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("width", w);
+  svg.setAttribute("height", threadH);
+  const path = document.createElementNS(svgNS, "path");
+  path.setAttribute("d", `M ${cx} 1 C ${cx + sway} ${threadH * .4}, ${cx - sway} ${threadH * .72}, ${cx} ${threadH}`);
+  svg.appendChild(path);
+
+  const pin = document.createElement("div");
+  pin.className = "pin";
+
+  const clip = document.createElement("div");
+  clip.className = "clip";
+
+  const photo = document.createElement("div");
+  photo.className = "photo";
+  photo.style.width = w + "px";
+  photo.style.height = h + "px";
 
   const img = makeImg(imgUrl(album, album.files[0]), album.title);
-  sizeToImage(tile, img);
-  extractColor(img).then((c) => c && applyGlow(tile, c));
-  wireHoverGrade(tile, img, () => DEFAULT_GRADE);
-  tile.appendChild(img);
+  extractColor(img).then((c) => c && applyGlow(strand, c));
+  wireHoverGrade(strand, img, () => DEFAULT_GRADE);
+  photo.appendChild(img);
 
-  const wash = document.createElement("div");
-  wash.className = "tile-wash";
-  tile.appendChild(wash);
-
-  const meta = document.createElement("div");
-  meta.innerHTML = `
-    <div class="tile-num">N&deg;${album.num}</div>
-    <div class="tile-meta">
-      <div>
-        <div class="tile-title">${album.title}</div>
-        <div class="tile-caption">${album.caption}</div>
-      </div>
-      <div class="tile-count">${album.files.length} FR</div>
-    </div>
+  const cap = document.createElement("div");
+  cap.className = "cap";
+  cap.style.width = w + "px";
+  cap.innerHTML = `
+    <span class="num">N&deg;${album.num} — ${album.files.length} FR</span>
+    <span class="title">${album.title}</span>
+    <span class="caption">${album.caption}</span>
   `;
-  while(meta.firstChild) tile.appendChild(meta.firstChild);
 
-  grid.appendChild(tile);
-  stagger(tile, i);
+  swing.append(svg, pin, clip, photo, cap);
+  strand.appendChild(swing);
+  container.appendChild(strand);
+  stagger(strand, i, 70, 9);
+}
+
+// classic "justified gallery" row-fill: greedily pack each row at a target
+// height, then scale that row so it lands flush with both edges — so a row
+// never trails off short, and it's cheap enough to redo on every resize
+function buildWire(){
+  wireRowsEl.innerHTML = "";
+  const containerWidth = wireRowsEl.clientWidth || (window.innerWidth - 112);
+  const rowGap = containerWidth < 760 ? 24 : 40;
+  const targetH = containerWidth < 760 ? 160 : containerWidth < 1100 ? 200 : 230;
+
+  const rows = [];
+  let row = [], rowWidth = 0;
+  ALBUMS.forEach((album) => {
+    const hang = hangProfile(album.slug);
+    const w = targetH * hang.ratio;
+    const gapIfAdded = row.length ? rowGap : 0;
+    if(row.length && rowWidth + gapIfAdded + w > containerWidth){
+      rows.push(row);
+      row = []; rowWidth = 0;
+    }
+    const gap = row.length ? rowGap : 0;
+    row.push({ album, hang, w });
+    rowWidth += gap + w;
+  });
+  if(row.length) rows.push(row);
+
+  let i = 0;
+  rows.forEach((rowItems) => {
+    const gapsTotal = (rowItems.length - 1) * rowGap;
+    const naturalWidth = rowItems.reduce((s, it) => s + it.w, 0);
+    // a lone item forced edge-to-edge would blow up to the full row width —
+    // only ever stretch a row that has company to share the width with
+    const shouldFill = rowItems.length > 1;
+    const scale = shouldFill ? clamp((containerWidth - gapsTotal) / naturalWidth, 1, 1.55) : 1;
+
+    const wire = document.createElement("div");
+    wire.className = "wire";
+
+    rowItems.forEach((it) => {
+      const h = Math.round(targetH * scale);
+      const w = Math.round(it.w * scale);
+      buildStrand(wire, it.album, it.hang, w, h, i);
+      i++;
+    });
+
+    wireRowsEl.appendChild(wire);
+  });
+}
+
+// phone layout — a winding path of hung stops, each connected to the next,
+// since a hanging wire has no room to breathe at phone width
+const PATH_OFFSETS = [0, 74, -64, 40, -46, 62, -70];
+
+function buildPath(){
+  pathEl.innerHTML = "";
+  let prevOffset = 0;
+
+  ALBUMS.forEach((album, i) => {
+    const offset = PATH_OFFSETS[i % PATH_OFFSETS.length];
+
+    const stop = document.createElement("div");
+    stop.className = "stop";
+    stop.style.setProperty("--i", i);
+
+    const inner = document.createElement("div");
+    inner.className = "stop-inner";
+    inner.style.transform = `translateX(${offset}px)`;
+    inner.onclick = () => openAlbum(album.slug);
+    applyGlow(stop, album.grade);
+
+    if(i > 0){
+      const H = 56;
+      const startX = 150 + (prevOffset - offset);
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("class", "connector");
+      svg.setAttribute("viewBox", `0 0 300 ${H}`);
+      svg.setAttribute("preserveAspectRatio", "none");
+      const path = document.createElementNS(svgNS, "path");
+      path.setAttribute("d", `M ${startX} 0 C ${startX} ${H * .4}, 150 ${H * .65}, 150 ${H}`);
+      svg.appendChild(path);
+      inner.appendChild(svg);
+    }
+
+    const node = document.createElement("div");
+    node.className = "node";
+    const img = makeImg(imgUrl(album, album.files[0]), album.title);
+    extractColor(img).then((c) => c && applyGlow(stop, c));
+    wireHoverGrade(inner, img, () => DEFAULT_GRADE);
+    node.appendChild(img);
+    inner.appendChild(node);
+
+    const cap = document.createElement("div");
+    cap.className = "cap";
+    cap.style.width = "220px";
+    cap.innerHTML = `
+      <span class="num">N&deg;${album.num} — ${album.files.length} FR</span>
+      <span class="title">${album.title}</span>
+      <span class="caption">${album.caption}</span>
+    `;
+    inner.appendChild(cap);
+
+    stop.appendChild(inner);
+    pathEl.appendChild(stop);
+    stagger(stop, i, 90, 8);
+
+    prevOffset = offset;
+  });
+}
+
+function renderIndex(){
+  if(window.innerWidth < MOBILE_BREAKPOINT) buildPath();
+  else buildWire();
+}
+
+renderIndex();
+let resizeTimer;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(renderIndex, 200);
 });
 
 const heroEl = document.getElementById("hero");
