@@ -586,7 +586,6 @@ function applyGlow(el, colors){
 // still displays either way.
 function makeImg(src, alt){
   const img = document.createElement("img");
-  img.loading = "lazy";
   img.alt = alt;
   img.crossOrigin = "anonymous";
   img.onerror = () => {
