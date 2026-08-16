@@ -186,7 +186,7 @@
   }
   .wire{
     position:relative;
-    display:flex; align-items:flex-start; flex-wrap:wrap; gap: 44px 40px;
+    display:flex; align-items:flex-start; flex-wrap:nowrap; gap: 44px 40px;
     padding-top: 1px;
   }
   .wire::before{
@@ -295,11 +295,9 @@
     padding: 4px 0 12px;
   }
   .stop{
-    margin-top: 56px;
     opacity:0; transform: translateY(14px);
     transition: opacity .6s var(--ease), transform .6s cubic-bezier(.22,1.4,.36,1);
   }
-  .stop:first-child{ margin-top:0; }
   .stop.in{ opacity:1; transform:none; }
 
   .stop-inner{
@@ -309,8 +307,6 @@
   }
   .connector{
     position:absolute; left:50%; top:-56px;
-    width:300px; height:56px;
-    transform: translateX(-50%);
     overflow:visible; pointer-events:none;
   }
   .connector path{
@@ -322,7 +318,7 @@
   .stop-inner:hover .connector path, .stop-inner:active .connector path{ opacity:1; }
 
   .node{
-    width:96px; height:96px; border-radius:50%;
+    border-radius:50%;
     overflow:hidden; position:relative;
     border: 3px solid var(--glow, var(--line));
     box-shadow: 0 16px 32px -16px rgba(0,0,0,.7), 0 0 0 5px var(--glow-soft, transparent);
@@ -618,24 +614,27 @@ function mulberry32(seed){
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
 }
-const HANG_SHAPES = [
-  { ratio:1    },
-  { ratio:.78  },
-  { ratio:.6   },
-  { ratio:1.7  },
-  { ratio:2.3  },
-  { ratio:.85  }
-];
-
-// a roll's aspect ratio and thread character are fixed by its slug — its
-// actual pixel size is decided later, per row, by the justified-fill layout
+// a roll's thread length/sway is just character, fixed by its slug — its
+// print's actual aspect ratio comes from the real photo (see loadRatio),
+// not a guess, so a portrait shot never gets forced into a wide frame
 function hangProfile(slug){
   const rand = mulberry32(seedFromString(slug));
-  const shape = HANG_SHAPES[Math.floor(rand() * HANG_SHAPES.length)];
-  const ratio = shape.ratio * (.85 + rand() * .3);
   const threadFactor = .18 + rand() * .55;
   const swayFactor = (rand() * 2 - 1) * .22;
-  return { ratio, threadFactor, swayFactor };
+  return { threadFactor, swayFactor };
+}
+
+// reads a photo's real width/height so its hung print matches its actual
+// orientation — just image metadata, no canvas/CORS needed for this part.
+// Ratio is clamped so a true panorama or extreme portrait can't blow up
+// the row-fill math, while still reading as clearly wide or tall.
+function loadRatio(src){
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(clamp(img.naturalWidth / img.naturalHeight, .45, 2.6));
+    img.onerror = () => resolve(1);
+    img.src = src;
+  });
 }
 
 /* ---------- drop-in reveal on scroll ---------- */
@@ -733,7 +732,7 @@ function buildWire(){
   let row = [], rowWidth = 0;
   ALBUMS.forEach((album) => {
     const hang = hangProfile(album.slug);
-    const w = targetH * hang.ratio;
+    const w = targetH * (album.ratio || 1);
     const gapIfAdded = row.length ? rowGap : 0;
     if(row.length && rowWidth + gapIfAdded + w > containerWidth){
       rows.push(row);
@@ -756,6 +755,9 @@ function buildWire(){
 
     const wire = document.createElement("div");
     wire.className = "wire";
+    // must match the gap the packing/fill math above assumed, or every
+    // row past the first item quietly drifts off its computed position
+    wire.style.gap = rowGap + "px";
 
     rowItems.forEach((it) => {
       const h = Math.round(targetH * scale);
@@ -769,18 +771,33 @@ function buildWire(){
 }
 
 // phone layout — a winding path of hung stops, each connected to the next,
-// since a hanging wire has no room to breathe at phone width
-const PATH_OFFSETS = [0, 74, -64, 40, -46, 62, -70];
+// since a hanging wire has no room to breathe at phone width. Node size,
+// zigzag reach and the connecting line all scale off the measured path
+// width, so it stays proportioned from small phones up to the tablet
+// breakpoint instead of a size tuned for one screen.
+const PATH_OFFSET_FRACS = [0, .82, -.72, .52, -.58, .78, -.86];
 
 function buildPath(){
   pathEl.innerHTML = "";
+
+  const pw = pathEl.clientWidth || window.innerWidth - 80;
+  const nodeSize = pw < 340 ? 116 : pw < 420 ? 136 : 152;
+  const capWidth = Math.min(pw - 24, pw < 340 ? 210 : 250);
+  const H = Math.round(nodeSize * .62);
+  // the caption is wider than the node and rides the same shift, so the
+  // zigzag reach has to respect whichever of the two is wider or a
+  // far-offset caption pokes past the viewport edge
+  const safeHalf = (pw - capWidth) / 2 - 6;
+  const maxOffset = Math.max(0, Math.min(Math.round(nodeSize * .68), Math.floor(safeHalf)));
+
   let prevOffset = 0;
 
   ALBUMS.forEach((album, i) => {
-    const offset = PATH_OFFSETS[i % PATH_OFFSETS.length];
+    const offset = Math.round(PATH_OFFSET_FRACS[i % PATH_OFFSET_FRACS.length] * maxOffset);
 
     const stop = document.createElement("div");
     stop.className = "stop";
+    stop.style.marginTop = (i === 0 ? 0 : H) + "px";
     stop.style.setProperty("--i", i);
 
     const inner = document.createElement("div");
@@ -790,20 +807,32 @@ function buildPath(){
     applyGlow(stop, album.grade);
 
     if(i > 0){
-      const H = 56;
-      const startX = 150 + (prevOffset - offset);
+      // the curve only ever needs to span the gap between the previous
+      // node's local x (delta) and this one's (0) — sizing the box to that
+      // exact span, instead of a fixed guess, is what keeps it from
+      // reaching past the viewport edge on a far-offset stop
+      const delta = prevOffset - offset;
+      const pad = 10;
+      const minX = Math.min(0, delta) - pad;
+      const boxWidth = Math.abs(delta) + pad * 2;
       const svg = document.createElementNS(svgNS, "svg");
       svg.setAttribute("class", "connector");
-      svg.setAttribute("viewBox", `0 0 300 ${H}`);
+      svg.setAttribute("viewBox", `${minX} 0 ${boxWidth} ${H}`);
       svg.setAttribute("preserveAspectRatio", "none");
+      svg.style.top = `-${H}px`;
+      svg.style.height = `${H}px`;
+      svg.style.width = `${boxWidth}px`;
+      svg.style.marginLeft = `${minX}px`;
       const path = document.createElementNS(svgNS, "path");
-      path.setAttribute("d", `M ${startX} 0 C ${startX} ${H * .4}, 150 ${H * .65}, 150 ${H}`);
+      path.setAttribute("d", `M ${delta} 0 C ${delta} ${H * .4}, 0 ${H * .65}, 0 ${H}`);
       svg.appendChild(path);
       inner.appendChild(svg);
     }
 
     const node = document.createElement("div");
     node.className = "node";
+    node.style.width = nodeSize + "px";
+    node.style.height = nodeSize + "px";
     const img = makeImg(imgUrl(album, album.files[0]), album.title);
     extractColor(img).then((c) => c && applyGlow(stop, c));
     wireHoverGrade(inner, img, () => DEFAULT_GRADE);
@@ -812,7 +841,7 @@ function buildPath(){
 
     const cap = document.createElement("div");
     cap.className = "cap";
-    cap.style.width = "220px";
+    cap.style.width = capWidth + "px";
     cap.innerHTML = `
       <span class="num">N&deg;${album.num} — ${album.files.length} FR</span>
       <span class="title">${album.title}</span>
@@ -833,11 +862,19 @@ function renderIndex(){
   else buildWire();
 }
 
-renderIndex();
-let resizeTimer;
-window.addEventListener("resize", () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(renderIndex, 200);
+// wait for every roll's real aspect ratio before laying anything out —
+// row membership depends on each print's width, so a layout built from
+// guessed ratios and corrected later would just visibly reshuffle once
+// the real ones arrive
+Promise.all(ALBUMS.map((album) =>
+  loadRatio(imgUrl(album, album.files[0])).then((r) => { album.ratio = r; })
+)).then(() => {
+  renderIndex();
+  let resizeTimer;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(renderIndex, 200);
+  });
 });
 
 const heroEl = document.getElementById("hero");
