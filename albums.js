@@ -146,7 +146,7 @@ const ALBUMS = [
     slug: "cedar-ensemble", title: "Cedar Ensemble",
     location: "Various", mood: "cedar",
     caption: "A close listen to a group that plays like one instrument.",
-    files: ["CedarEnsemble_01","CedarEnsemble_02","CedarEnsemble_03","CedarEnsemble_04","CedarEnsemble_05","CedarEnsemble_06","CedarEnsemble_07","CedarEnsemble_08","CedarEnsemble_09","CedarEnsemble_10","CedarEnsemble_11","CedarEnsemble_12","CedarEnsemble_13","CedarEnsemble_14","CedarEnsemble_15","CedarEnsemble_16","CedarEnsemble_17","CedarEnsemble_18","CedarEnsemble_19","CedarEnsemble_20","CedarEnsemble_21","CedarEnsemble_22","CedarEnsemble_23","CedarEnsemble_24","CedarEnsemble_25","CedarEnsemble_26","CedarEnsemble_27","CedarEnsemble_28","CedarEnsemble_29","CedarEnsemble_30","CedarEnsemble_31","CedarEnsemble_32","CedarEnsemble_33","CedarEnsemble_34","CedarEnsemble_35","CedarEnsemble_36","CedarEnsemble_37"]
+    files: ["CedarEnsemble_17","CedarEnsemble_02","CedarEnsemble_03","CedarEnsemble_04","CedarEnsemble_05","CedarEnsemble_06","CedarEnsemble_07","CedarEnsemble_08","CedarEnsemble_09","CedarEnsemble_10","CedarEnsemble_11","CedarEnsemble_12","CedarEnsemble_13","CedarEnsemble_14","CedarEnsemble_15","CedarEnsemble_16","CedarEnsemble_01","CedarEnsemble_18","CedarEnsemble_19","CedarEnsemble_20","CedarEnsemble_21","CedarEnsemble_22","CedarEnsemble_23","CedarEnsemble_24","CedarEnsemble_25","CedarEnsemble_26","CedarEnsemble_27","CedarEnsemble_28","CedarEnsemble_29","CedarEnsemble_30","CedarEnsemble_31","CedarEnsemble_32","CedarEnsemble_33","CedarEnsemble_34","CedarEnsemble_35","CedarEnsemble_36","CedarEnsemble_37"]
   }
 
   /* ── PASTE NEW ROLLS BELOW THIS LINE ──────────────────────
