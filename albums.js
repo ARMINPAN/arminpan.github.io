@@ -52,26 +52,27 @@ const MOODS = {
   mist:    { a: "90,140,170",  accent: "#7fc4e8" },
   plum:    { a: "110,70,130",  accent: "#c98fe0" },
   slate:   { a: "80,90,100",   accent: "#a9b8c4" },
-  gold:    { a: "150,120,40",  accent: "#e8c250" }
+  gold:    { a: "150,120,40",  accent: "#e8c250" },
+  cedar:   { a: "100,75,50",   accent: "#b98a5a" }
 };
 
 const ALBUMS = [
   {
     slug: "hoco-2025", title: "HOCO 2025",
     location: "Western University", mood: "gold",
-    caption: "Homecoming weekend, in bursts of school colour.",
+    caption: "Homecoming 2025 weekend at Western.",
     files: ["HOCO2025_10","HOCO2025_02","HOCO2025_03","HOCO2025_04","HOCO2025_05","HOCO2025_06","HOCO2025_07","HOCO2025_08","HOCO2025_09","HOCO2025_26","HOCO2025_11","HOCO2025_12","HOCO2025_13","HOCO2025_14","HOCO2025_15","HOCO2025_16","HOCO2025_17","HOCO2025_18","HOCO2025_19","HOCO2025_20","HOCO2025_21","HOCO2025_22","HOCO2025_23","HOCO2025_24","HOCO2025_25","HOCO2025_01","HOCO2025_27","HOCO2025_28","HOCO2025_29","HOCO2025_30","HOCO2025_31","HOCO2025_32","HOCO2025_33","HOCO2025_34","HOCO2025_35","HOCO2025_36","HOCO2025_37","HOCO2025_38","HOCO2025_39","HOCO2025_40","HOCO2025_41","HOCO2025_42","HOCO2025_43","HOCO2025_44"]
   },
   {
-    slug: "nrd-western", title: "NRD - Western",
+    slug: "nrd-western", title: "NRD 2026",
     location: "Western University", mood: "slate",
-    caption: "A day of research, presented well.",
+    caption: "Neuroscience Research Day 2026 at Western.",
     files: ["NRD2026_22","NRD2026_02","NRD2026_03","NRD2026_04","NRD2026_05","NRD2026_06","NRD2026_07","NRD2026_08","NRD2026_09","NRD2026_10","NRD2026_11","NRD2026_12","NRD2026_13","NRD2026_14","NRD2026_15","NRD2026_16","NRD2026_17","NRD2026_18","NRD2026_19","NRD2026_20","NRD2026_21","NRD2026_01"]
   },
   {
-    slug: "brainhack", title: "BrainHack - Western",
+    slug: "brainhack", title: "BrainHack 2026",
     location: "Various", mood: "plum",
-    caption: "A weekend of half-slept ideas and whiteboards full of them.",
+    caption: "Brainhack is an annual hackathon taking place at Western.",
     files: ["BrainHack17","BrainHack3","BrainHack18","BrainHack5","BrainHack2","BrainHack1","BrainHack4","BrainHack6","BrainHack7","BrainHack8","BrainHack9","BrainHack10","BrainHack11","BrainHack12","BrainHack13","BrainHack14","BrainHack15","BrainHack16"]
   },
   {
@@ -140,6 +141,12 @@ const ALBUMS = [
     location: "Ontario, Canada", mood: "mist",
     caption: "Ontario's Majestic.",
     files: ["NiagaraFalls1","NiagaraFalls2","NiagaraFalls3","NiagaraFalls4"]
+  },
+  {
+    slug: "cedar-ensemble", title: "Cedar Ensemble",
+    location: "Various", mood: "cedar",
+    caption: "A close listen to a group that plays like one instrument.",
+    files: ["CedarEnsemble_01","CedarEnsemble_02","CedarEnsemble_03","CedarEnsemble_04","CedarEnsemble_05","CedarEnsemble_06","CedarEnsemble_07","CedarEnsemble_08","CedarEnsemble_09","CedarEnsemble_10","CedarEnsemble_11","CedarEnsemble_12","CedarEnsemble_13","CedarEnsemble_14","CedarEnsemble_15","CedarEnsemble_16","CedarEnsemble_17","CedarEnsemble_18","CedarEnsemble_19","CedarEnsemble_20","CedarEnsemble_21","CedarEnsemble_22","CedarEnsemble_23","CedarEnsemble_24","CedarEnsemble_25","CedarEnsemble_26","CedarEnsemble_27","CedarEnsemble_28","CedarEnsemble_29","CedarEnsemble_30","CedarEnsemble_31","CedarEnsemble_32","CedarEnsemble_33","CedarEnsemble_34","CedarEnsemble_35","CedarEnsemble_36","CedarEnsemble_37"]
   }
 
   /* ── PASTE NEW ROLLS BELOW THIS LINE ──────────────────────
