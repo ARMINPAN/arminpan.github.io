@@ -122,6 +122,12 @@ const ALBUMS = [
     location: "Ontario, Canada", mood: "mist",
     caption: "Ontario's Majestic.",
     files: ["NiagaraFalls1","NiagaraFalls2","NiagaraFalls3","NiagaraFalls4"]
+  },
+  {
+    slug: "brainhack", title: "BrainHack",
+    location: "Various", mood: "plum",
+    caption: "A weekend of half-slept ideas and whiteboards full of them.",
+    files: ["BrainHack1","BrainHack2","BrainHack3","BrainHack4","BrainHack5","BrainHack6","BrainHack7","BrainHack8","BrainHack9","BrainHack10","BrainHack11","BrainHack12","BrainHack13","BrainHack14","BrainHack15","BrainHack16","BrainHack17","BrainHack18"]
   }
 
   /* ── PASTE NEW ROLLS BELOW THIS LINE ──────────────────────
