@@ -57,6 +57,24 @@ const MOODS = {
 
 const ALBUMS = [
   {
+    slug: "hoco-2025", title: "HOCO 2025",
+    location: "Western University", mood: "gold",
+    caption: "Homecoming weekend, in bursts of school colour.",
+    files: ["HOCO2025_10","HOCO2025_02","HOCO2025_03","HOCO2025_04","HOCO2025_05","HOCO2025_06","HOCO2025_07","HOCO2025_08","HOCO2025_09","HOCO2025_26","HOCO2025_11","HOCO2025_12","HOCO2025_13","HOCO2025_14","HOCO2025_15","HOCO2025_16","HOCO2025_17","HOCO2025_18","HOCO2025_19","HOCO2025_20","HOCO2025_21","HOCO2025_22","HOCO2025_23","HOCO2025_24","HOCO2025_25","HOCO2025_01","HOCO2025_27","HOCO2025_28","HOCO2025_29","HOCO2025_30","HOCO2025_31","HOCO2025_32","HOCO2025_33","HOCO2025_34","HOCO2025_35","HOCO2025_36","HOCO2025_37","HOCO2025_38","HOCO2025_39","HOCO2025_40","HOCO2025_41","HOCO2025_42","HOCO2025_43","HOCO2025_44"]
+  },
+  {
+    slug: "nrd-western", title: "NRD - Western",
+    location: "Western University", mood: "slate",
+    caption: "A day of research, presented well.",
+    files: ["NRD2026_22","NRD2026_02","NRD2026_03","NRD2026_04","NRD2026_05","NRD2026_06","NRD2026_07","NRD2026_08","NRD2026_09","NRD2026_10","NRD2026_11","NRD2026_12","NRD2026_13","NRD2026_14","NRD2026_15","NRD2026_16","NRD2026_17","NRD2026_18","NRD2026_19","NRD2026_20","NRD2026_21","NRD2026_01"]
+  },
+  {
+    slug: "brainhack", title: "BrainHack - Western",
+    location: "Various", mood: "plum",
+    caption: "A weekend of half-slept ideas and whiteboards full of them.",
+    files: ["BrainHack17","BrainHack3","BrainHack18","BrainHack5","BrainHack2","BrainHack1","BrainHack4","BrainHack6","BrainHack7","BrainHack8","BrainHack9","BrainHack10","BrainHack11","BrainHack12","BrainHack13","BrainHack14","BrainHack15","BrainHack16"]
+  },
+  {
     slug: "naqsh-e-jahan", title: "Naqsh-e Jahan",
     location: "Isfahan, Iran", mood: "teal",
     caption: "Where the tile work argues with the sky and wins.",
@@ -122,24 +140,6 @@ const ALBUMS = [
     location: "Ontario, Canada", mood: "mist",
     caption: "Ontario's Majestic.",
     files: ["NiagaraFalls1","NiagaraFalls2","NiagaraFalls3","NiagaraFalls4"]
-  },
-  {
-    slug: "brainhack", title: "BrainHack - Western",
-    location: "Various", mood: "plum",
-    caption: "A weekend of half-slept ideas and whiteboards full of them.",
-    files: ["BrainHack17","BrainHack3","BrainHack18","BrainHack5","BrainHack2","BrainHack1","BrainHack4","BrainHack6","BrainHack7","BrainHack8","BrainHack9","BrainHack10","BrainHack11","BrainHack12","BrainHack13","BrainHack14","BrainHack15","BrainHack16"]
-  },
-  {
-    slug: "nrd-western", title: "NRD - Western",
-    location: "Western University", mood: "slate",
-    caption: "A day of research, presented well.",
-    files: ["NRD2026_01","NRD2026_02","NRD2026_03","NRD2026_04","NRD2026_05","NRD2026_06","NRD2026_07","NRD2026_08","NRD2026_09","NRD2026_10","NRD2026_11","NRD2026_12","NRD2026_13","NRD2026_14","NRD2026_15","NRD2026_16","NRD2026_17","NRD2026_18","NRD2026_19","NRD2026_20","NRD2026_21","NRD2026_22"]
-  },
-  {
-    slug: "hoco-2025", title: "HOCO 2025",
-    location: "Western University", mood: "gold",
-    caption: "Homecoming weekend, in bursts of school colour.",
-    files: ["HOCO2025_01","HOCO2025_02","HOCO2025_03","HOCO2025_04","HOCO2025_05","HOCO2025_06","HOCO2025_07","HOCO2025_08","HOCO2025_09","HOCO2025_10","HOCO2025_11","HOCO2025_12","HOCO2025_13","HOCO2025_14","HOCO2025_15","HOCO2025_16","HOCO2025_17","HOCO2025_18","HOCO2025_19","HOCO2025_20","HOCO2025_21","HOCO2025_22","HOCO2025_23","HOCO2025_24","HOCO2025_25","HOCO2025_26","HOCO2025_27","HOCO2025_28","HOCO2025_29","HOCO2025_30","HOCO2025_31","HOCO2025_32","HOCO2025_33","HOCO2025_34","HOCO2025_35","HOCO2025_36","HOCO2025_37","HOCO2025_38","HOCO2025_39","HOCO2025_40","HOCO2025_41","HOCO2025_42","HOCO2025_43","HOCO2025_44"]
   }
 
   /* ── PASTE NEW ROLLS BELOW THIS LINE ──────────────────────
