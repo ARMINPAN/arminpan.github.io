@@ -1,0 +1,1823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F7F7;
+    --bg-alt:#F7F7F7;
+    --ink:#242424;
+    --gray:#9A9A9A;
+    --gray-dim:#B8B8B8;
+    --line:#DEDEDE;
+    --sans:'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --mono:'Helvetica Neue', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{ scroll-behavior:auto; scroll-snap-type: none; scrollbar-width: thin; scrollbar-color: rgba(36,36,36,0.18) transparent; }
+
+  ::-webkit-scrollbar{ width:4px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:rgba(36,36,36,0.18); border-radius:0; }
+  ::-webkit-scrollbar-thumb:hover{ background:rgba(36,36,36,0.32); }
+  body{
+    font-family:var(--sans);
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+    .hero, .panel, .team-section, footer,
+    .panel > *, footer > *,
+    .team-heading, .team-member{ opacity:1; transform:none; }
+  }
+
+
+  /* NAV */
+  /* Full-width black bar pinned to the top: logo left, links + CTA
+     grouped on the right. */
+  .header-wrap{
+    position:sticky; top:0; z-index:50;
+  }
+  header{
+    position:relative; overflow:hidden;
+    width:100%;
+    display:grid; grid-template-columns:1fr auto auto;
+    align-items:center; gap:14px;
+    padding:22px 40px;
+    background:#000;
+  }
+  header .nav-cta-pill{ justify-self:end; }
+  /* Faint animated sEMG trace behind the nav bar, sitting under the
+     logo/links/CTA. Independent of the bigger hero-wide mesh: the bar has
+     its own opaque background, so this reads the same over any section
+     below the hero. Hidden while still over the hero itself (which
+     already has its own mesh) and fades in once you scroll into the
+     section after it. */
+  .header-emg-bg{
+    position:absolute; inset:0; width:100%; height:100%;
+    z-index:0; pointer-events:none; display:block;
+    opacity:0; transition:opacity 0.5s ease;
+  }
+  .header-emg-bg.is-active{ opacity:1; }
+  .wordmark{ position:relative; z-index:1; font-size:16px; font-weight:800; letter-spacing:-0.01em; color:#fff; }
+  .nav-links{
+    position:relative; z-index:1;
+    display:flex; justify-content:center; align-items:center;
+    gap:4px; list-style:none;
+  }
+  .nav-links a{
+    display:inline-flex; align-items:center;
+    font-size:13.5px; font-weight:500; color:#A8A8A8; text-decoration:none;
+    padding:6px 12px; border-radius:100px;
+    transition:color 0.15s ease, background 0.2s ease;
+  }
+  .nav-links a:hover{ color:#fff; background:rgba(255,255,255,0.1); }
+  .nav-links a .nav-icon{
+    width:0; margin-right:0; opacity:0;
+    overflow:hidden; flex-shrink:0; color:#fff;
+    transition:width 0.25s ease, margin 0.25s ease, opacity 0.2s ease;
+  }
+  .nav-links a:hover .nav-icon{ width:13px; margin-right:6px; opacity:1; }
+  .nav-cta-pill{
+    position:relative; z-index:1;
+    font-family:var(--sans); font-weight:600; font-size:13px;
+    color:#000; background:#fff;
+    padding:9px 18px; border-radius:100px; text-decoration:none;
+    white-space:nowrap;
+    transition:transform 0.2s ease;
+  }
+  .nav-cta-pill:hover{ transform:scale(1.05); }
+
+  @media (max-width:760px){
+    .nav-links{ display:none; }
+    header{ grid-template-columns:auto auto; justify-content:space-between; padding:18px 20px; }
+  }
+
+  /* HERO */
+  .hero{
+    position:relative;
+    min-height:100vh; min-height:100dvh; display:flex; flex-direction:row;
+    align-items:center; justify-content:space-between; gap:48px;
+    max-width:1140px; margin:0 auto;
+    padding:60px 56px;
+    scroll-snap-align: start;
+  }
+  /* Faint animated sEMG mesh behind the whole hero — full-bleed to the
+     viewport edges (a "break out of the container" trick: centered on
+     the hero's own horizontal center, which already matches the
+     viewport's since .hero itself is centered) rather than clipped to
+     the 1140px content column. Purely decorative, sits under the
+     headline, CTA and 3D model. */
+  .hero-emg-bg{
+    position:absolute; top:0; left:50%;
+    width:100vw; height:100%;
+    transform:translateX(-50%);
+    z-index:0; pointer-events:none; display:block;
+  }
+  .hero-left{
+    position:relative; z-index:1;
+    transform:translateY(-34px);
+    display:flex; flex-direction:column; align-items:flex-start;
+    text-align:left; flex:1 1 480px; min-width:0;
+  }
+  .title-xl{
+    font-size:clamp(44px, 5vw, 88px);
+    font-weight:800; line-height:1; letter-spacing:-0.03em;
+    color:var(--ink);
+  }
+  .title-xl-typed{
+    display:inline-block;
+    transition:opacity 0.65s ease;
+  }
+  .title-xl-typed.is-fading{ opacity:0.2; }
+  .title-xl-typed::after{
+    content:''; display:inline-block; width:3px; height:0.82em;
+    margin-left:0.08em; vertical-align:-0.04em; background:var(--ink);
+    animation:title-xl-cursor 0.8s steps(1) infinite;
+  }
+  @keyframes title-xl-cursor{ 50%{ opacity:0; } }
+  .hero-subtitle{
+    font-size:clamp(14px, 1.2vw, 17px);
+    font-weight:500; line-height:1.4; letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--gray);
+    margin-top:14px;
+  }
+
+  /* Hero fades straight in — the headline runs its own typing animation, no directional slide */
+  .hero{
+    opacity:0;
+    transition:opacity 0.7s ease;
+  }
+  .hero.is-visible{ opacity:1; }
+
+  /* Every other section: its contents fade in from the left, lightly staggered */
+  .panel > *,
+  footer > *,
+  .divider-black > :not(.divider-bg){
+    opacity:0;
+    transform:translateX(-40px);
+    transition:opacity 0.55s ease, transform 0.6s cubic-bezier(.2,.8,.2,1);
+  }
+  .panel.is-visible > *,
+  footer.is-visible > *,
+  .divider-black.is-visible > :not(.divider-bg){
+    opacity:1;
+    transform:translateX(0);
+  }
+  .panel.is-visible > *:nth-child(2){ transition-delay:0.1s; }
+  .panel.is-visible > *:nth-child(3){ transition-delay:0.2s; }
+  .panel.is-visible > *:nth-child(4){ transition-delay:0.3s; }
+  .panel.is-visible > *:nth-child(5){ transition-delay:0.4s; }
+  footer.is-visible > *:nth-child(2){ transition-delay:0.12s; }
+
+  .hero-right{
+    flex:0 1 420px; display:flex; justify-content:center;
+    position:relative; z-index:1;
+    transform:translateY(-34px);
+  }
+  /* Soft grounding shadow beneath the 3D model — sits behind the card,
+     not inside it, so the card's overflow:hidden doesn't clip its blur */
+  .hero-right::before{
+    content:'';
+    position:absolute;
+    left:50%; bottom:11%;
+    width:58%; height:12%;
+    transform:translateX(-50%);
+    background:radial-gradient(ellipse at center, rgba(36,36,36,0.24) 0%, rgba(36,36,36,0.12) 45%, rgba(36,36,36,0) 75%);
+    filter:blur(12px);
+    z-index:0;
+    pointer-events:none;
+  }
+  /* A soft white glare behind the whole card — larger than the card
+     itself and blurred, so it reads as a gentle halo/glow around the
+     model rather than a hard-edged box, even against the page's own
+     near-white background. */
+  .hero-right::after{
+    content:'';
+    position:absolute;
+    left:50%; top:50%;
+    width:160%; height:160%;
+    transform:translate(-50%, -50%);
+    background:radial-gradient(circle at center, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.5) 45%, rgba(255,255,255,0) 72%);
+    filter:blur(18px);
+    z-index:0;
+    pointer-events:none;
+  }
+  .hero-card{
+    position:relative; z-index:1;
+    width:100%; max-width:400px; aspect-ratio:1/1;
+    border-radius:28px; overflow:hidden;
+  }
+  .hero-model{
+    display:block; width:100%; height:100%;
+    cursor:grab;
+  }
+  .hero-model:active{ cursor:grabbing; }
+  .hero-model-status{
+    position:absolute; left:18px; bottom:16px;
+    font-size:11px; color:var(--gray);
+    pointer-events:none;
+  }
+  .hero-card-label{
+    position:absolute; left:20px; bottom:16px;
+    font-size:15px; font-weight:500; color:var(--ink);
+    background:rgba(255,255,255,0.75);
+    padding:5px 12px; border-radius:100px;
+    backdrop-filter:blur(4px);
+  }
+
+  @media (max-width:860px){
+    .hero{ flex-direction:column; text-align:center; padding:60px 32px; }
+    .hero-left{ align-items:center; text-align:center; }
+    .hero-right{ order:-1; flex:0 0 auto; max-width:260px; }
+  }
+
+  /* SCROLL-DRIVEN TITLE PANEL — background pinned in place, titles change as you scroll past */
+  .story{ position:relative; }
+  .story-sticky{
+    position:sticky; top:0; height:100vh; width:100%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    overflow:hidden;
+    transition: background-color 0.7s ease;
+    /* transparent, not an opaque color — so the traveling photo (which sits
+       behind it, see .traveling-bg-image below) actually shows through
+       instead of being covered by a solid panel background */
+  }
+  /* Shared background photo — a single fixed layer, not two separate ones,
+     so it reads as one object physically travelling: while the "Wear it."
+     sticky panel is still scrolling up into place (before it locks), only
+     the sliver of it that has actually scrolled into view is revealed —
+     like a curtain rising from the bottom — rather than the whole photo
+     popping in the instant any part of the section is technically within
+     reach. Once fully in place it slides left as you scroll — held at the
+     same vertical level throughout — settling into its resting spot for
+     the "Know it all!" step, where it just stays put. A true BACKGROUND:
+     z-index is negative, so real content (title text, metric numbers)
+     always renders on top of it unconditionally — normal in-flow content
+     always paints above negative z-index elements, no ambiguity — while it
+     still sits above the page's own root background. Low opacity acts as
+     the "mask" — the photo reads as a texture, not a full-strength image. */
+  .traveling-bg-image{
+    position:fixed; top:0; left:0;
+    width:100vw; height:100vh;
+    background-size:cover; background-position:center;
+    opacity:0;
+    clip-path: inset(100% 0 0 0);
+    z-index:-1; pointer-events:none;
+  }
+  /* Rides along with the photo (identical size/position/transform) and
+     fades its trailing edge into the page's own background color, so the
+     boundary between "photo" and the plain space revealed beside it is a
+     seamless, exact color match rather than the photo's own (slightly
+     different) edge tone meeting the page background abruptly. Invisible
+     while the photo is still full-screen behind "Wear it." — it only
+     fades in as the pan actually gets underway. */
+  .traveling-bg-fade{
+    position:fixed; top:0; left:0;
+    width:100vw; height:100vh;
+    background:linear-gradient(to right, transparent 72%, var(--bg) 96%);
+    opacity:0;
+    z-index:-1; pointer-events:none;
+  }
+  /* Content row: text on one side, the "Know it all!" gallery on the other
+     (only that step widens the gallery column — see .is-gallery-step below).
+     For every other step the gallery column collapses to nothing and the
+     text simply centers, unchanged from before. */
+  .story-content{
+    position:relative; z-index:1;
+    width:100%; max-width:1300px; margin:0 auto; padding:0 40px;
+    display:flex; align-items:center; justify-content:center;
+    gap:56px;
+  }
+  .story-text-col{
+    display:flex; flex-direction:column; align-items:center;
+    min-width:0;
+  }
+  .story-gallery{
+    position:relative;
+    flex:0 1 0px; opacity:0; overflow:hidden;
+    pointer-events:none;
+  }
+  #storyPanel.is-gallery-step .story-content{
+    justify-content:space-between;
+  }
+  #storyPanel.is-gallery-step .story-text-col{
+    align-items:flex-start; flex:0 1 40%; max-width:40%;
+    margin-left:10%;
+  }
+  #storyPanel.is-gallery-step .story-gallery{
+    /* Sized for the focused tab plus one small one and a bigger peek of
+       a third — its left edge falls wherever that leaves it; the right
+       edge is what stays pinned to the true page edge (margin-right).
+       No transition here — the layout reservation snaps instantly, at
+       the same moment the title/subtitle text swaps. What's actually
+       animated is the gallery's own opacity/rise via .out/.enter-start
+       below (driven by JS in lockstep with the title's own crossfade),
+       exactly the same choreography "Let it rip!" itself uses, rather
+       than a width/slide-based reveal. */
+    flex-basis:calc(62vh + 64px); opacity:1;
+    pointer-events:auto;
+    margin-right: calc(-1 * max(40px, (100vw - 1300px) / 2 + 40px));
+  }
+  /* Same rise-and-fade the title/subtitle use — see .story-title.out /
+     .enter-start. Needs to out-specificity the rule above (hence
+     "#storyPanel .story-gallery.out", not just ".story-gallery.out") so
+     it can actually override opacity:1 while is-gallery-step is still
+     present during the exit half of the transition. */
+  #storyPanel .story-gallery.out{ transform:translateY(var(--exit-y, -38px)); opacity:0; }
+  #storyPanel .story-gallery.enter-start{ transform:translateY(var(--enter-y, 30px)); opacity:0; }
+  /* A row of vertical "tabs" — portrait cards with random heights (see the
+     gallery JS), the focused one scaled up. No edge mask — the
+     row cuts cleanly rather than fading, so a trailing tab can visibly
+     hang half off the right edge (never the left: scroll-snap always
+     re-aligns the left-most tab flush once scrolling settles). */
+  .story-gallery-track{
+    display:flex; align-items:center; gap:16px;
+    /* hidden, not auto — no wheel/trackpad/touch-drag scrolling here
+       anymore, only the prev/next arrows (via JS scrollLeft/scrollBy,
+       which still work fine on an overflow:hidden element) */
+    overflow-x:hidden;
+    scroll-snap-type:x mandatory;
+    scroll-padding-left:4px;
+    padding:8px 4px;
+    overflow-anchor:none;
+  }
+  .story-gallery-tab{
+    position:relative;
+    /* --h is a random per-tab height in vh (set by the gallery JS on load,
+       30vh fallback); width is derived from it so every tab stays a
+       3:4 portrait card at any screen size. */
+    /* --tab-scale (set on .story-gallery) shrinks every tab uniformly on
+       small screens — see the max-width:900px media query below. */
+    flex:0 0 auto;
+    height:calc(var(--h, 30vh) * var(--tab-scale, 1));
+    width:calc(var(--h, 30vh) * var(--tab-scale, 1) * 0.75);
+    border-radius:16px; overflow:hidden;
+    scroll-snap-align:start;
+    transition:width 0.85s cubic-bezier(.22,.61,.36,1), height 0.85s cubic-bezier(.22,.61,.36,1);
+  }
+  /* The tab nearest the track's leading edge — grows to stand out; as
+     scrolling moves it out of that spot it shrinks back to normal size
+     while whichever tab takes its place grows instead (see the JS below). */
+  .story-gallery-tab.is-focused{
+    /* Grows in both directions, keeping it portrait (~0.73 width:height) */
+    height:calc(var(--h, 30vh) * var(--tab-scale, 1) * 1.5);
+    width:calc(var(--h, 30vh) * var(--tab-scale, 1) * 1.1);
+    z-index:1;
+  }
+  .story-gallery-tab img, .story-gallery-tab video{
+    display:block; width:100%; height:100%; object-fit:cover;
+    filter:brightness(0.85);
+  }
+  .story-gallery-tab::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(to top, rgba(0,0,0,0.72), transparent 55%);
+  }
+  .story-gallery-tab-label{
+    position:absolute; left:14px; right:14px; bottom:14px; z-index:1;
+    color:#fff; font-weight:700; font-size:21px; letter-spacing:-0.01em;
+    line-height:1.15;
+  }
+  /* Stage wraps just the track + its two arrows, so the arrows center on
+     the track's own height regardless of the scrollbar sitting below it. */
+  .story-gallery-stage{ position:relative; }
+  .story-gallery-nav{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:34px; height:34px; border-radius:50%; flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.78);
+    border:none;
+    box-shadow:0 6px 16px rgba(0,0,0,0.28);
+    color:#fff; cursor:pointer; z-index:2;
+    transition:transform 0.15s ease, background 0.2s ease;
+  }
+  .story-gallery-nav:hover{ background:#000; transform:translateY(-50%) translateY(-1px); }
+  .story-gallery-prev{ left:8px; }
+  .story-gallery-next{ right:8px; }
+  .story-gallery-nav[hidden]{ display:none; }
+  /* Small screens: text stacks above the gallery, which spans the full
+     width (bleeding off the right edge like on desktop) with every tab
+     scaled down so title + subtitle + gallery fit on one screen. */
+  @media (max-width:900px){
+    .story-content{ flex-direction:column; gap:20px; padding:0 20px; }
+    .story-gallery{ --tab-scale:0.6; }
+    #storyPanel.is-gallery-step .story-text-col{
+      align-items:center; flex:0 0 auto; max-width:100%; margin-left:0;
+    }
+    #storyPanel.is-gallery-step .story-gallery{
+      flex:0 0 auto; align-self:stretch;
+      margin-right:-20px;
+    }
+    .story-gallery-tab-label{ left:10px; right:10px; bottom:10px; font-size:15px; }
+    .story-gallery-nav{ width:30px; height:30px; }
+  }
+  .story-title-track{
+    position:relative; z-index:1;
+    overflow:visible;
+    min-height:clamp(64px, 11vw, 140px);
+    display:flex; align-items:center;
+  }
+  .story-title{
+    font-size:clamp(48px, 9vw, 128px); font-weight:800;
+    letter-spacing:-0.03em; color:var(--ink);
+    display:inline-block;
+    transform:translateY(0);
+    opacity:1;
+  }
+  .story-title.out{ transform:translateY(var(--exit-y, -38px)); opacity:0; }
+  .story-title.enter-start{ transform:translateY(var(--enter-y, 30px)); opacity:0; }
+  /* Optional subtext under a story title — empty (and collapsed) for steps
+     that don't set data-subtitle, crossfading in step with the title for
+     the ones that do. */
+  .story-subtitle{
+    display:block;
+    position:relative; z-index:1;
+    max-width:620px; margin:20px auto 0; padding:0 32px;
+    font-size:clamp(15px, 1.8vw, 20px); font-weight:500; line-height:1.55;
+    color:var(--ink);
+    text-align:center;
+    transform:translateY(0);
+    opacity:1;
+  }
+  .story-subtitle:empty{ display:none; }
+  .story-subtitle.out{ transform:translateY(var(--exit-y, -38px)); opacity:0; }
+  .story-subtitle.enter-start{ transform:translateY(var(--enter-y, 30px)); opacity:0; }
+  #storyPanel.is-gallery-step .story-subtitle{
+    margin:10px 0 0; text-align:left; max-width:420px;
+  }
+  @media (max-width:900px){
+    #storyPanel.is-gallery-step .story-subtitle{ text-align:center; margin:20px auto 0; max-width:520px; }
+  }
+  /* "Weak signal" glitch treatment for one phrase in the subtitle —
+     mostly hidden at rest (a signal that isn't coming through), with a
+     JS timer (see below) randomly flashing it to full visibility, in
+     its normal ink color, for a brief irregular moment. Genuinely
+     random timing rather than a repeating CSS animation, since a
+     fixed-duration loop inevitably starts to feel metronomic once you
+     notice the cycle. Instant on/off (no transition) so each flash
+     reads as a dropout snapping in, not a fade. */
+  .subtitle-glitch{
+    display:block;
+    margin-top:2.4em;
+    opacity:0.08;
+  }
+  .subtitle-glitch.is-flashing{ opacity:1; }
+  @media (prefers-reduced-motion: reduce){
+    .subtitle-glitch{ opacity:1; }
+  }
+  .story-step{ height:100vh; scroll-snap-align: start; }
+
+  .panel{ min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 40px; text-align:center; scroll-snap-align: start; }
+
+  /* DIVIDER — a black beat between the story section and capability, breaking
+     the white rhythm before it resumes. Holds the "coaches you in
+     return" payoff (title + bullet list of what the coaching actually
+     is) over a looping haptic video darkened by a black overlay. */
+  .divider-black{
+    position:relative; overflow:hidden;
+    background:#000;
+    padding:320px 40px;
+    scroll-snap-align:start;
+  }
+  /* Full-bleed background video + black overlay (::after). Raise/lower
+     the overlay's alpha to darken/reveal more of the video. */
+  .divider-bg{
+    position:absolute; inset:0; z-index:0;
+    pointer-events:none;
+  }
+  .divider-bg video{
+    display:block; width:100%; height:100%; object-fit:cover;
+  }
+  .divider-bg::after{
+    content:''; position:absolute; inset:0;
+    background:rgba(0,0,0,0.65);
+  }
+  .coach-stage{
+    position:relative; z-index:1;
+    max-width:1180px; margin:0 auto;
+  }
+  /* Full content width, on a single line (wraps only on narrow screens,
+     see media query). */
+  .coach-title{
+    display:block;
+    white-space:nowrap;
+    font-size:clamp(60px, 6vw, 84px); font-weight:400;
+    letter-spacing:-0.02em; line-height:1.15; color:#fff;
+    margin-bottom:50px;
+  }
+  .coach-list{
+    list-style:none;
+    display:flex; flex-direction:column; gap:22px;
+  }
+  .coach-list li{
+    position:relative; padding-left:26px;
+    font-size:clamp(18px, 1.9vw, 23px); font-weight:500; line-height:1.4;
+    color:rgba(255,255,255,0.82);
+    text-align:left;
+  }
+  .coach-list li::before{
+    content:''; position:absolute; left:0; top:0.5em;
+    width:8px; height:8px; border-radius:50%;
+    background:#fff;
+  }
+  @media (max-width:1000px){
+    .coach-title{ white-space:normal; text-align:center; font-size:clamp(34px, 8vw, 60px); }
+  }
+
+  /* CAPABILITY — a static bento-style grid of 10 sport photos, each tile
+     a different width and height. Explicit line-based placement (not
+     grid-auto-flow:dense — it only greedily fills the first slot big
+     enough for each item, it doesn't solve the tiling puzzle, so
+     mismatched spans leave leftover holes). t2 runs tall down the left
+     side across rows 1-5 — a genuine vertical piece, not just another
+     horizontal strip — with everything else in the remaining columns
+     built back up to match its height exactly, then a plain horizontal
+     band underneath. A small gap between tiles, but the spans still add
+     up exactly per band/column so nothing leaves a bigger, uneven hole. */
+  .sport-grid{
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    grid-auto-rows:88px;
+    gap:10px;
+    width:100%; max-width:1180px;
+    margin-top:56px;
+  }
+  .sport-tile{
+    position:relative;
+    border-radius:14px;
+    overflow:hidden;
+  }
+  .sport-tile img{
+    display:block; width:100%; height:100%; object-fit:cover;
+  }
+  /* Tall vertical feature, left side, spanning rows 1-5 */
+  .sport-tile.t2{ grid-column:1 / 3; grid-row:1 / 6; }
+  /* Rows 1-2, right of the tall tile: 2+2 = 4 columns */
+  .sport-tile.t1{ grid-column:3 / 5; grid-row:1 / 3; }
+  .sport-tile.t3{ grid-column:5 / 7; grid-row:1 / 3; }
+  /* Row 3, right of the tall tile: one wide strip, 4 columns */
+  .sport-tile.t5{ grid-column:3 / 7; grid-row:3 / 4; }
+  /* Rows 4-5, right of the tall tile: 1+2+1 = 4 columns, two of them tall/narrow */
+  .sport-tile.t4{ grid-column:3 / 4; grid-row:4 / 6; }
+  .sport-tile.t6{ grid-column:4 / 6; grid-row:4 / 6; }
+  .sport-tile.t8{ grid-column:6 / 7; grid-row:4 / 6; }
+  /* Band below (rows 6-7), full width: 2+2+2 = 6 columns */
+  .sport-tile.t7{ grid-column:1 / 3; grid-row:6 / 8; }
+  .sport-tile.t9{ grid-column:3 / 5; grid-row:6 / 8; }
+  .sport-tile.t10{ grid-column:5 / 7; grid-row:6 / 8; }
+  @media (max-width:760px){
+    /* Bento bands don't have room to breathe at 2 columns — fall back
+       to a plain, still gap-consistent 2-up grid instead of squeezing
+       the same spans down. */
+    .sport-grid{ grid-template-columns:repeat(2, 1fr); grid-auto-rows:140px; }
+    .sport-tile{ grid-column:auto !important; grid-row:auto !important; }
+  }
+
+  /* Sized to its content rather than a full screen (as other .panels
+     are), so there's no big empty band between the photo grid and the
+     team section below it. */
+  #capability{ min-height:auto; padding:100px 40px 40px; }
+
+  /* Large section title (used by the capability section) */
+  .title-lg{ font-size:clamp(40px, 6vw, 84px); font-weight:800; line-height:1; letter-spacing:-0.02em; color:var(--ink); }
+
+  /* TEAM */
+  .team-section{
+    padding:100px 56px 92px;
+    max-width:1240px; margin:0 auto;
+  }
+  .team-heading{
+    margin-bottom:34px;
+    opacity:0; transform:translateX(-40px);
+    transition:opacity 0.55s ease, transform 0.6s cubic-bezier(.2,.8,.2,1);
+  }
+  .team-section.is-visible .team-heading{ opacity:1; transform:translateX(0); }
+  .team-title{
+    display:block; max-width:760px;
+    font-size:clamp(30px, 4vw, 52px); font-weight:800;
+    line-height:0.98; letter-spacing:-0.02em; color:var(--ink);
+  }
+  .team-kicker{
+    font-size:12px; color:var(--gray); letter-spacing:0.08em;
+    text-transform:uppercase;
+  }
+  .team-grid{
+    display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:18px;
+  }
+  .team-member{
+    min-width:0; opacity:0; transform:translateX(-32px);
+    transition:opacity 0.45s ease, transform 0.5s cubic-bezier(.2,.8,.2,1);
+  }
+  .team-section.is-visible .team-member{ opacity:1; transform:translateX(0); }
+  .team-section.is-visible .team-member:nth-child(1){ transition-delay:0.08s; }
+  .team-section.is-visible .team-member:nth-child(2){ transition-delay:0.18s; }
+  .team-section.is-visible .team-member:nth-child(3){ transition-delay:0.28s; }
+  .team-section.is-visible .team-member:nth-child(4){ transition-delay:0.38s; }
+  .team-section.is-visible .team-member:nth-child(5){ transition-delay:0.48s; }
+  /* Text-only: a thin rule above each person keeps the row structured */
+  .team-member{ border-top:1px solid var(--line); padding-top:16px; }
+  .team-name{
+    display:block; font-size:18px; font-weight:600;
+    color:var(--ink);
+  }
+  .team-degree{
+    display:block; margin-top:6px; font-size:14px; color:var(--gray);
+  }
+
+  /* FOOTER */
+  footer{
+    background:#2B2B2B; color:#A8A8A8;
+    padding:50px 40px; display:flex; justify-content:space-between; align-items:center;
+    font-size:13px;
+    scroll-snap-align: start;
+  }
+  footer a{ color:#F2F2F2; text-decoration:none; }
+  footer a:hover{ text-decoration:underline; }
+  .footer-contacts{ display:flex; flex-wrap:wrap; gap:8px 24px; justify-content:flex-end; }
+
+  @media (max-width:720px){
+    .team-section{ padding:32px 24px 76px; }
+    .team-heading{ margin-bottom:28px; }
+    .team-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:28px 14px; }
+    footer{ flex-direction:column; gap:14px; text-align:center; }
+    .footer-contacts{ justify-content:center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Single traveling background photo — shared between the "Wear it." title
+     and the metrics panel below it; JS pans/fades it as you scroll (see the
+     bottom script block). Fixed + placed first so it stacks under all real
+     content regardless of which section is currently on screen. -->
+<div class="traveling-bg-image" id="travelingBgImage" aria-hidden="true"></div>
+<div class="traveling-bg-fade" id="travelingBgFade" aria-hidden="true"></div>
+
+<!-- Reusable sketch of the sensor: rounded body, one status dot, two electrode leads -->
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="sensor-sketch" viewBox="0 0 320 130">
+    <path d="M66,12 C120,8 190,15 254,9 C284,9 302,35 302,65 C302,95 284,121 254,121 C190,126 120,118 66,122 C36,122 18,95 18,65 C18,35 36,11 66,12 Z"
+          fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="72" cy="46" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <circle cx="72" cy="65" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <circle cx="72" cy="84" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M140,65 L160,65 L170,42 L181,90 L191,48 L201,65 L222,65"
+          fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+</svg>
+
+
+
+<div class="header-wrap">
+  <header>
+    <canvas class="header-emg-bg" id="headerEmgCanvas" aria-hidden="true"></canvas>
+    <div class="wordmark">ACTUS</div>
+    <ul class="nav-links">
+      <li><a href="#top"><svg class="nav-icon" viewBox="0 0 320 130"><use href="#sensor-sketch"/></svg><span>Product</span></a></li>
+      <li><a href="#story"><svg class="nav-icon" viewBox="0 0 320 130"><use href="#sensor-sketch"/></svg><span>How it works</span></a></li>
+    </ul>
+    <a class="nav-cta-pill" href="#preorder">Pre-order</a>
+  </header>
+</div>
+
+<section class="hero" id="top">
+  <canvas class="hero-emg-bg" id="heroEmgCanvas" aria-hidden="true"></canvas>
+  <div class="hero-left">
+    <span class="title-xl" aria-label="Meet your smartest coach.">Meet your smartest <span class="title-xl-typed" id="titleXlTyped">coach</span></span>
+    <span class="hero-subtitle">Realtime EMG biowearable</span>
+  </div>
+  <div class="hero-right">
+    <div class="hero-card">
+      <canvas class="hero-model" id="heroModel" aria-label="Rotating 3D model of the Actus sensor"></canvas>
+      <span class="hero-model-status" id="heroModelStatus">Loading model...</span>
+    </div>
+  </div>
+</section>
+
+<section class="story" id="story">
+  <div class="story-sticky" id="storyPanel">
+    <div class="story-content">
+      <div class="story-text-col">
+        <div class="story-title-track">
+          <span class="story-title enter-start" id="storyTitle"></span>
+        </div>
+        <span class="story-subtitle enter-start" id="storySubtitle"></span>
+      </div>
+      <div class="story-gallery" id="storyGallery">
+        <div class="story-gallery-stage">
+          <button class="story-gallery-nav story-gallery-prev" type="button" aria-label="Previous">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div class="story-gallery-track" id="storyGalleryTrack">
+            <div class="story-gallery-tab"><video src="assets/F1.mp4" autoplay muted loop playsinline aria-label="Reads muscles"></video><span class="story-gallery-tab-label">Reads Muscles</span></div>
+            <div class="story-gallery-tab"><img src="https://images.unsplash.com/photo-1434494878577-86c23bcb06b9?auto=format&fit=crop&w=500&q=80" alt="ECG"><span class="story-gallery-tab-label">ECG</span></div>
+            <div class="story-gallery-tab"><img src="https://images.unsplash.com/photo-1550345332-09e3ac987658?auto=format&fit=crop&w=500&q=80" alt="Fatigue detection"><span class="story-gallery-tab-label">Fatigue Detection</span></div>
+            <div class="story-gallery-tab"><video src="assets/F2.mp4" autoplay muted loop playsinline aria-label="Form correction"></video><span class="story-gallery-tab-label">Form Correction</span></div>
+            <div class="story-gallery-tab"><img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=500&q=80" alt="Pose estimation"><span class="story-gallery-tab-label">Pose Estimation</span></div>
+            <div class="story-gallery-tab"><img src="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=500&q=80" alt="Rep count"><span class="story-gallery-tab-label">Rep Count</span></div>
+            <div class="story-gallery-tab"><img src="https://images.unsplash.com/photo-1548690312-e3b507d8c110?auto=format&fit=crop&w=500&q=80" alt="Coaches you"><span class="story-gallery-tab-label">Coaches You</span></div>
+          </div>
+          <button class="story-gallery-nav story-gallery-next" type="button" aria-label="Next">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="story-step" data-title="Wear it." data-bg-image="assets/photo1.jpeg"></div>
+  <div class="story-step" data-title="Let it rip!" data-subtitle="Actus measures what matters. &lt;span class=&quot;subtitle-glitch&quot;&gt;Whoops,sorry to the other guys still guessing.&lt;/span&gt;"></div>
+</section>
+
+<section class="divider-black">
+  <div class="divider-bg" aria-hidden="true">
+    <video src="assets/haptic1.mp4" autoplay muted loop playsinline></video>
+  </div>
+  <div class="coach-stage">
+    <span class="coach-title">And it coaches you in return!</span>
+    <ul class="coach-list">
+      <li>Haptic system for movement correction</li>
+      <li>Haptic counter for rep count</li>
+      <li>AI coach</li>
+    </ul>
+  </div>
+</section>
+
+<section class="panel" id="capability">
+  <span class="title-lg">No matter what you do,<br>Actus is going to make it easier.</span>
+  <div class="sport-grid">
+    <div class="sport-tile t1"><img src="https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=700&q=80" alt="Sprinter at the starting blocks"></div>
+    <div class="sport-tile t2"><img src="https://images.unsplash.com/photo-1608245449230-4ac19066d2d0?auto=format&fit=crop&w=700&q=80" alt="Basketball player dunking"></div>
+    <div class="sport-tile t3"><img src="https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=700&q=80" alt="Runners silhouetted at sunrise"></div>
+    <div class="sport-tile t4"><img src="https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=700&q=80" alt="Tennis player serving"></div>
+    <div class="sport-tile t5"><img src="https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=700&q=80" alt="Cyclists racing in a pack"></div>
+    <div class="sport-tile t6"><img src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=700&q=80" alt="Weightlifter mid-lift"></div>
+    <div class="sport-tile t7"><img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=700&q=80" alt="Athlete doing a core workout"></div>
+    <div class="sport-tile t8"><img src="https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=700&q=80" alt="Swimmer mid-stroke"></div>
+    <div class="sport-tile t9"><img src="https://images.unsplash.com/photo-1554284126-aa88f22d8b74?auto=format&fit=crop&w=700&q=80" alt="Group weightlifting session"></div>
+    <div class="sport-tile t10"><img src="https://images.unsplash.com/photo-1541625602330-2277a4c46182?auto=format&fit=crop&w=700&q=80" alt="Cyclists riding along a coastal road"></div>
+  </div>
+</section>
+
+<section class="team-section" id="team">
+  <div class="team-heading">
+    <span class="team-title">The mind of neuroscientists. The build of engineers.</span>
+  </div>
+  <div class="team-grid">
+    <article class="team-member">
+      <span class="team-name">Mehrdad Kashefi</span>
+      <span class="team-degree">PhD, Neuroscience</span>
+      <span class="team-degree">BSc, Electrical Engineering</span>
+    </article>
+    <article class="team-member">
+      <span class="team-name">Ali Taffakor</span>
+      <span class="team-degree">MSc, Neuroscience</span>
+      <span class="team-degree">BSc, Electrical Engineering</span>
+    </article>
+    <article class="team-member">
+      <span class="team-name">Ali Ghavampour</span>
+      <span class="team-degree">MSc, Neuroscience</span>
+      <span class="team-degree">BSc, Electrical Engineering</span>
+    </article>
+    <article class="team-member">
+      <span class="team-name">Amin Nazerzadeh</span>
+      <span class="team-degree">PhD Candidate, Neuroscience</span>
+      <span class="team-degree">BSc, Computer Engineering</span>
+    </article>
+    <article class="team-member">
+      <span class="team-name">Armin Panjehpour</span>
+      <span class="team-degree">PhD Candidate, Neuroscience</span>
+      <span class="team-degree">BSc, Electrical Engineering</span>
+    </article>
+  </div>
+</section>
+
+<footer id="preorder">
+  <div>© 2026 Actus Biotech. All rights reserved.</div>
+  <div class="footer-contacts">
+    <a href="mailto:hello@actus.bio">hello@actus.bio</a>
+    <a href="mailto:support@actus.bio">support@actus.bio</a>
+    <a href="mailto:research@actus.bio">research@actus.bio</a>
+    <a href="mailto:teams@actus.bio">teams@actus.bio</a>
+  </div>
+</footer>
+
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.170.0/build/three.module.js"
+    }
+  }
+</script>
+
+<script type="module">
+  import * as THREE from 'https://unpkg.com/three@0.170.0/build/three.module.js';
+  import { GLTFLoader } from 'https://unpkg.com/three@0.170.0/examples/jsm/loaders/GLTFLoader.js';
+
+  const modelCanvas = document.getElementById('heroModel');
+  const modelStatus = document.getElementById('heroModelStatus');
+  const modelRenderer = new THREE.WebGLRenderer({ canvas:modelCanvas, alpha:true, antialias:true });
+  const modelScene = new THREE.Scene();
+  const modelCamera = new THREE.PerspectiveCamera(28, 1, 0.01, 100);
+  const modelRoot = new THREE.Group();
+  const modelClock = new THREE.Clock();
+  const modelLoader = new GLTFLoader();
+  let modelObject;
+
+  modelScene.add(modelRoot);
+  modelScene.add(new THREE.HemisphereLight(0xffffff, 0xd9d9d9, 2.2));
+
+  const keyLight = new THREE.DirectionalLight(0xffffff, 3.2);
+  keyLight.position.set(3, 4, 5);
+  modelScene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0xffffff, 1.4);
+  fillLight.position.set(-4, 1, 2);
+  modelScene.add(fillLight);
+
+  function resizeModel(){
+    const width = modelCanvas.clientWidth;
+    const height = modelCanvas.clientHeight;
+    const pixelRatio = Math.min(window.devicePixelRatio, 2);
+    modelRenderer.setPixelRatio(pixelRatio);
+    modelRenderer.setSize(width, height, false);
+    modelCamera.aspect = width / height;
+    modelCamera.updateProjectionMatrix();
+  }
+
+  function frameModel(object){
+    const bounds = new THREE.Box3().setFromObject(object);
+    const size = bounds.getSize(new THREE.Vector3());
+    const center = bounds.getCenter(new THREE.Vector3());
+    const largestDimension = Math.max(size.x, size.y, size.z);
+    const scale = 1.3 / largestDimension;
+
+    object.scale.setScalar(scale);
+    object.position.set(-center.x * scale, -center.y * scale , -center.z * scale);
+    modelRoot.position.x = 0.05;
+    modelRoot.position.y = 0.15;
+    modelCamera.position.set(0, 0.15, 3.2);
+    modelCamera.lookAt(0, 0, 0);
+  }
+
+  modelLoader.load('actus_3d.glb', (gltf) => {
+    modelObject = gltf.scene;
+    modelRoot.add(modelObject);
+    frameModel(modelObject);
+    modelStatus.textContent = '';
+    resizeModel();
+  }, undefined, () => {
+    modelStatus.textContent = 'Model unavailable';
+  });
+
+  function renderModel(){
+    const elapsed = modelClock.getElapsedTime();
+    if (modelObject) {
+      modelRoot.rotation.x = -5 - elapsed * 0.25;
+      modelRoot.rotation.y = -1.8;
+      modelRoot.rotation.z = -1;
+    }
+    modelRenderer.render(modelScene, modelCamera);
+    requestAnimationFrame(renderModel);
+  }
+
+  window.addEventListener('resize', resizeModel);
+  resizeModel();
+  renderModel();
+</script>
+
+<script>
+  /* Synthetic surface-EMG generator, shared by the hero and nav-pill
+     backgrounds. Real sEMG is band-limited stochastic noise (the summed
+     firing of many motor units) whose amplitude follows muscle
+     activation — so each channel is band-passed Gaussian noise
+     multiplied by a contraction envelope: a quiet resting floor, then
+     bursts that ramp up, hold (with slight tremor), and release. Built
+     once into a looping buffer; both filters and the envelope wrap
+     around the buffer's end so the loop has no visible seam. */
+  // With rmsWindow > 0, returns the signal's moving RMS over that many
+  // samples instead of the raw trace — the smooth, non-negative
+  // "activation" envelope EMG apps usually display (~0..1).
+  function createSemgChannel(seed, length, rmsWindow){
+    const L = length || 8192;
+    let a = (seed * 2654435761) >>> 0;
+    const rand = () => { // mulberry32 — deterministic per seed
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    const gauss = () => Math.sqrt(-2 * Math.log(rand() || 1e-9)) * Math.cos(2 * Math.PI * rand());
+
+    const white = new Float32Array(L);
+    for (let i = 0; i < L; i++) white[i] = gauss();
+
+    // Band-pass = fast low-pass minus slow low-pass. Two passes around
+    // the buffer so the filter state is already "warm" at index 0.
+    const band = new Float32Array(L);
+    let fast = 0, slow = 0;
+    for (let pass = 0; pass < 2; pass++) {
+      for (let i = 0; i < L; i++) {
+        fast = 0.4 * fast + 0.6 * white[i];
+        slow = 0.95 * slow + 0.05 * white[i];
+        if (pass === 1) band[i] = fast - slow;
+      }
+    }
+    let sq = 0;
+    for (let i = 0; i < L; i++) sq += band[i] * band[i];
+    const norm = 1 / Math.sqrt(sq / L);
+
+    // Contraction envelope, in 0..1 (rest floor ~0.05).
+    const REST = 0.05;
+    const env = new Float32Array(L).fill(REST);
+    let t = rand() * 400;
+    while (t < L) {
+      const rise = 40 + rand() * 120;
+      const hold = 120 + rand() * 520;
+      const fall = 60 + rand() * 200;
+      const peak = 0.45 + rand() * 0.55;
+      const tremF = 0.02 + rand() * 0.03, tremP = rand() * 6.28;
+      const total = rise + hold + fall;
+      for (let k = 0; k < total; k++) {
+        let shape;
+        if (k < rise) shape = 0.5 - 0.5 * Math.cos(Math.PI * k / rise);
+        else if (k < rise + hold) shape = 1;
+        else shape = 0.5 + 0.5 * Math.cos(Math.PI * (k - rise - hold) / fall);
+        const v = REST + peak * shape * (0.85 + 0.15 * Math.sin(k * tremF + tremP));
+        const idx = Math.floor(t + k) % L;
+        if (v > env[idx]) env[idx] = v;
+      }
+      t += total + 150 + rand() * 750; // rest gap before the next contraction
+    }
+
+    const sig = new Float32Array(L);
+    for (let i = 0; i < L; i++) sig[i] = band[i] * norm * env[i] / 3; // ~±1 at full contraction
+
+    let out = sig;
+    if (rmsWindow > 0) {
+      // Centered sliding-window RMS, wrapping around the loop; scaled so
+      // a full contraction reads ~1 (raw RMS there is ~1/3).
+      const w = Math.round(rmsWindow), half = Math.floor(w / 2);
+      out = new Float32Array(L);
+      let acc = 0;
+      for (let k = -half; k < w - half; k++) { const v = sig[((k % L) + L) % L]; acc += v * v; }
+      for (let i = 0; i < L; i++) {
+        out[i] = Math.sqrt(Math.max(0, acc) / w) * 3;
+        const add = sig[(i + w - half) % L], drop = sig[((i - half) % L + L) % L];
+        acc += add * add - drop * drop;
+      }
+    }
+
+    // Linear-interpolated, wrap-around lookup at any (fractional) position.
+    return function sample(pos){
+      const p = ((pos % L) + L) % L;
+      const i = Math.floor(p), f = p - i;
+      return out[i] + (out[(i + 1) % L] - out[i]) * f;
+    };
+  }
+</script>
+
+<script>
+  /* Hero background: a faint, slow-panning mesh of sEMG-like traces filling
+     the whole hero section. Everything is a function of (x, time) rather
+     than stored points, so panning is just an ever-increasing phase —
+     no buffering or tiling seams. */
+  (function(){
+    const canvas = document.getElementById('heroEmgCanvas');
+    const hero = canvas && canvas.closest('.hero');
+    if (!canvas || !hero) return;
+    const ctx = canvas.getContext('2d');
+    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const hash1 = n => { const s = Math.sin(n * 127.1) * 43758.5453123; return s - Math.floor(s); };
+    const hash2 = n => { const s = Math.sin(n * 269.5) * 32157.6473521; return s - Math.floor(s); };
+    const hash3 = n => { const s = Math.sin(n * 419.2) * 24634.1234987; return s - Math.floor(s); };
+
+    const LINE_COUNT = 16;
+    const COLOR = '10,10,10';
+    const OPACITY_RANGE = [0.04, 0.08];
+    const LINEWIDTH_RANGE = [0.5, 1];
+    const SPEED = 0.012; // px of phase per ms — very slow pan
+
+    const channels = Array.from({ length: LINE_COUNT }, (_, i) => {
+      const seed = i * 91.7 + 13;
+      return {
+        seed,
+        // moving-RMS envelope of a synthetic sEMG trace (see
+        // createSemgChannel) and its height at full contraction, as a
+        // fraction of hero height
+        emg: createSemgChannel(i + 1, 8192, 100),
+        ampFrac: 0.07 + hash3(seed * 4.1) * 0.06,
+        flowMul: 0.75 + hash1(seed * 6.1) * 0.6,
+        opacity: OPACITY_RANGE[0] + hash2(seed * 6.1) * (OPACITY_RANGE[1] - OPACITY_RANGE[0]),
+        lineWidth: LINEWIDTH_RANGE[0] + hash3(seed * 6.1) * (LINEWIDTH_RANGE[1] - LINEWIDTH_RANGE[0]),
+      };
+    });
+
+    // buffer samples per px of trace — sets how dense the EMG looks
+    const SAMPLES_PER_PX = 1.8;
+
+    let width = 0, height = 0, rafId = null, start = performance.now();
+
+    function resize(){
+      // measure the canvas's own box (full viewport width), not the
+      // narrower max-width hero container it's visually escaping
+      width = canvas.clientWidth;
+      height = canvas.clientHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    new ResizeObserver(resize).observe(canvas);
+
+    function draw(now){
+      const staticFrame = reduceMotionQuery.matches;
+      const flowPhase = staticFrame ? 0 : (now - start) * SPEED;
+      ctx.clearRect(0, 0, width, height);
+
+      const step = 3; // RMS envelope is smooth, no need for per-sample detail
+      channels.forEach((c, i) => {
+        const baseY = ((i + 0.5) / LINE_COUNT) * height;
+        const u0 = flowPhase * c.flowMul;
+        ctx.beginPath();
+        for (let x = 0; x <= width; x += step) {
+          const u = x + u0;
+          // fixed baseline per line — only the RMS humps rise from it
+          const y = baseY - c.emg(u * SAMPLES_PER_PX) * c.ampFrac * height;
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = `rgba(${COLOR}, ${c.opacity})`;
+        ctx.lineWidth = c.lineWidth;
+        ctx.stroke();
+      });
+
+      rafId = (staticFrame || document.hidden) ? null : requestAnimationFrame(draw);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && rafId === null) rafId = requestAnimationFrame(draw);
+    });
+    rafId = requestAnimationFrame(draw);
+  })();
+</script>
+
+<script>
+  /* Nav pill background: the same faint, slow-panning sEMG mesh, scaled
+     down to live inside the small header pill itself. Hidden while the
+     hero (which has its own mesh) is on screen, and fades in once you
+     scroll into the section after it — and stays on for every section
+     below that, since the pill has its own opaque background. */
+  (function(){
+    const canvas = document.getElementById('headerEmgCanvas');
+    const header = canvas && canvas.closest('header');
+    if (!canvas || !header) return;
+    const ctx = canvas.getContext('2d');
+    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const heroEl = document.querySelector('.hero');
+    if (heroEl) {
+      const activationObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          // active once the hero has scrolled *up out* of view (not before it)
+          const scrolledPast = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+          canvas.classList.toggle('is-active', scrolledPast);
+        });
+      }, { threshold: 0 });
+      activationObserver.observe(heroEl);
+    } else {
+      canvas.classList.add('is-active');
+    }
+
+    const hash1 = n => { const s = Math.sin(n * 127.1) * 43758.5453123; return s - Math.floor(s); };
+    const hash2 = n => { const s = Math.sin(n * 269.5) * 32157.6473521; return s - Math.floor(s); };
+    const hash3 = n => { const s = Math.sin(n * 419.2) * 24634.1234987; return s - Math.floor(s); };
+
+    const LINE_COUNT = 5;
+    const COLOR = '255,255,255'; // white — the nav bar is black
+    const OPACITY_RANGE = [0.12, 0.2];
+    const LINEWIDTH_RANGE = [0.5, 1];
+    const SPEED = 0.01; // px of phase per ms — very slow pan
+
+    const channels = Array.from({ length: LINE_COUNT }, (_, i) => {
+      const seed = i * 91.7 + 13;
+      return {
+        seed,
+        // moving-RMS envelope of a synthetic sEMG trace (see
+        // createSemgChannel) and its height at full contraction, as a
+        // fraction of pill height
+        emg: createSemgChannel(i + 101, 4096, 60),
+        ampFrac: 0.3 + hash3(seed * 4.1) * 0.2,
+        flowMul: 0.75 + hash1(seed * 6.1) * 0.6,
+        opacity: OPACITY_RANGE[0] + hash2(seed * 6.1) * (OPACITY_RANGE[1] - OPACITY_RANGE[0]),
+        lineWidth: LINEWIDTH_RANGE[0] + hash3(seed * 6.1) * (LINEWIDTH_RANGE[1] - LINEWIDTH_RANGE[0]),
+      };
+    });
+
+    // buffer samples per px of trace — denser than the hero, since the
+    // pill is small and a full contraction should still fit in view
+    const SAMPLES_PER_PX = 2.5;
+
+    let width = 0, height = 0, rafId = null, start = performance.now();
+
+    function resize(){
+      width = header.clientWidth;
+      height = header.clientHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    new ResizeObserver(resize).observe(header);
+
+    function draw(now){
+      const staticFrame = reduceMotionQuery.matches;
+      const flowPhase = staticFrame ? 0 : (now - start) * SPEED;
+      ctx.clearRect(0, 0, width, height);
+
+      const step = 2;
+      channels.forEach((c, i) => {
+        const baseY = ((i + 0.5) / LINE_COUNT) * height;
+        const u0 = flowPhase * c.flowMul;
+        ctx.beginPath();
+        for (let x = 0; x <= width; x += step) {
+          const u = x + u0;
+          // fixed baseline per line — only the RMS humps rise from it
+          const y = baseY - c.emg(u * SAMPLES_PER_PX) * c.ampFrac * height;
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = `rgba(${COLOR}, ${c.opacity})`;
+        ctx.lineWidth = c.lineWidth;
+        ctx.stroke();
+      });
+
+      rafId = (staticFrame || document.hidden) ? null : requestAnimationFrame(draw);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && rafId === null) rafId = requestAnimationFrame(draw);
+    });
+    rafId = requestAnimationFrame(draw);
+  })();
+</script>
+
+<script>
+  /* "Know it all!" vertical-tab gallery — all 7 feature categories, a
+     few tabs visible at a time with the rest reachable via the prev/next
+     arrows (native touch/trackpad swipe works too). Loops in both
+     directions: the real set of tabs gets one clone set prepended and
+     one appended — [clone][real][clone] — so there's always more
+     (identical) content to scroll into either way. The instant the
+     leading edge crosses past the real set into a clone set, we silently
+     rewind/advance scrollLeft by exactly one set's width to land back on
+     the equivalent spot in the real set — the clone is pixel-identical,
+     so the jump is invisible, and scrolling can keep going indefinitely
+     either direction using only these 3 physical copies. The tab nearest
+     the track's leading edge is the "focused" one and grows; as
+     scrolling moves a different tab into that spot, the old one shrinks
+     back and the new one grows — a real width change (not a transform),
+     so the row genuinely reflows around it instead of just overlapping. */
+  (function(){
+    const track = document.getElementById('storyGalleryTrack');
+    if (!track) return;
+    const prevBtn = document.querySelector('.story-gallery-prev');
+    const nextBtn = document.querySelector('.story-gallery-next');
+
+    const originals = Array.from(track.querySelectorAll('.story-gallery-tab'));
+    const setCount = originals.length;
+    // Random height per tab (24–36vh), assigned before cloning so each
+    // clone copies its original's height and the loop hand-off stays seamless.
+    originals.forEach(tab => {
+      tab.style.setProperty('--h', (24 + Math.random() * 12).toFixed(1) + 'vh');
+    });
+    function cloneSet(){
+      return originals.map(tab => {
+        const clone = tab.cloneNode(true);
+        clone.setAttribute('aria-hidden', 'true');
+        return clone;
+      });
+    }
+    const leadingFrag = document.createDocumentFragment();
+    cloneSet().forEach(el => leadingFrag.appendChild(el));
+    track.insertBefore(leadingFrag, track.firstChild);
+    const trailingFrag = document.createDocumentFragment();
+    cloneSet().forEach(el => trailingFrag.appendChild(el));
+    track.appendChild(trailingFrag);
+
+    // tabs[0..setCount-1] = leading clones (mirror setCount..setCount*2-1)
+    // tabs[setCount..setCount*2-1] = the real tabs
+    // tabs[setCount*2..setCount*3-1] = trailing clones (mirror the same real range)
+    const tabs = Array.from(track.querySelectorAll('.story-gallery-tab'));
+    // The offset every "at rest" focused tab settles at (the track's own
+    // left padding) — used throughout to convert between "raw content
+    // position" and "actual resting scrollLeft".
+    const REST_OFFSET = parseFloat(getComputedStyle(track).paddingLeft) || 0;
+    // Must match (and comfortably exceed) the CSS width-transition
+    // duration on .story-gallery-tab. handleLoop() measures tabs'
+    // widths to decide whether/how far to rewind — if it runs before
+    // the grow/shrink animation has actually finished, it measures
+    // mid-transition sizes and computes the wrong distance, landing on
+    // the wrong tab (this is what caused "jumps two tabs" — the settle
+    // check used to fire well before the (much slower) resize did).
+    const WIDTH_TRANSITION_MS = 850;
+
+    function setFocusIndexInstant(idx){
+      // No transition: used for the initial state and for the loop
+      // hand-off, where the size must carry over unchanged rather than
+      // replaying the grow/shrink animation.
+      const cur = tabs.find(t => t.classList.contains('is-focused'));
+      const next = tabs[idx];
+      if (cur) cur.style.transition = 'none';
+      next.style.transition = 'none';
+      tabs.forEach((t, i) => t.classList.toggle('is-focused', i === idx));
+      void next.offsetWidth; // flush the no-transition jump before re-enabling it
+      if (cur) cur.style.transition = '';
+      next.style.transition = '';
+    }
+    function setFocusIndex(idx){
+      tabs.forEach((t, i) => t.classList.toggle('is-focused', i === idx));
+    }
+    // Scroll-position-invariant: a tab's position in the full scrollable
+    // content, independent of the current scroll offset — re-measured
+    // fresh each time since tab widths change as focus moves between them.
+    function contentLeftOf(tab){
+      return tab.getBoundingClientRect().left - track.getBoundingClientRect().left + track.scrollLeft;
+    }
+    // If the tab that was just focused (mid grow/shrink) happens to be in
+    // a clone set, hand its focus off to the mirrored real tab at the
+    // same now-visible position — instantly, no transition, so the size
+    // carries over invisibly instead of replaying the animation (that
+    // replay was the "gets big twice" glitch).
+    function remapFocus(){
+      const idx = tabs.findIndex(t => t.classList.contains('is-focused'));
+      if (idx === -1) return;
+      let mirrorIdx = -1;
+      if (idx < setCount) mirrorIdx = idx + setCount;
+      else if (idx >= setCount * 2) mirrorIdx = idx - setCount;
+      if (mirrorIdx === -1) return;
+      setFocusIndexInstant(mirrorIdx);
+    }
+    // Set right before handleLoop writes to scrollLeft itself, so the
+    // 'scroll' event that write fires (asynchronously, on its own) can
+    // be told apart from a genuine new scroll and ignored — otherwise
+    // that echo re-arms the settle-timer below, triggering a second,
+    // redundant handleLoop() check shortly after the first. If that
+    // second check finds even a tiny residual (from the instant
+    // resize-swap in remapFocus, measured a beat later than the first
+    // check) still crossing the same threshold, it fires ANOTHER
+    // rewind+hand-off on top of the correct one — landing one tab
+    // further than intended.
+    let ignoreNextScroll = false;
+    function handleLoop(){
+      const realStart = contentLeftOf(tabs[setCount]);
+      const trailingStart = contentLeftOf(tabs[setCount * 2]);
+      const setWidth = trailingStart - realStart;
+      if (setWidth <= 0) return;
+      // A tab at rest sits at REST_OFFSET, not flush at 0 — so scrollLeft
+      // when tabs[setCount] is properly at rest is realStart - REST_OFFSET,
+      // not realStart itself. Comparing raw scrollLeft against realStart
+      // (no offset) meant this was spuriously true basically any time the
+      // first real tab was at rest, firing a bogus ~one-set-width jump
+      // forward and, right behind it, an unwanted focus hand-off back —
+      // exactly the "shrinks and regrows for no reason" glitch on that tab.
+      if (track.scrollLeft >= trailingStart - REST_OFFSET) {
+        ignoreNextScroll = true;
+        track.scrollLeft -= setWidth;
+        remapFocus();
+      } else if (track.scrollLeft < realStart - REST_OFFSET) {
+        ignoreNextScroll = true;
+        track.scrollLeft += setWidth;
+        remapFocus();
+      }
+    }
+
+    // A scroll distance computed once, up front, can't land on target:
+    // the outgoing tab shrinks and the incoming one grows (by amounts
+    // that vary per tab, since heights are random) while the scroll is
+    // still running. So button clicks drive their own rAF animation that
+    // re-measures the target tab's live position every frame and eases
+    // toward it, finishing just after the grow/shrink transition does —
+    // it always ends exactly on the target, no snap correction needed.
+    // Set the moment a button click starts its own scroll; syncFocus()
+    // (below) ignores the live position until that scroll has actually
+    // settled, so it can't fight the preset focus and flip it back
+    // mid-flight (which is what happens if both are allowed to disagree
+    // about which tab should be focused during the same scroll).
+    let suppressAutoFocus = false;
+    let animFrame = null;
+    const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+    function animateToTab(tab){
+      cancelAnimationFrame(animFrame);
+      const startLeft = track.scrollLeft;
+      const startTime = performance.now();
+      function step(now){
+        const t = Math.min(1, (now - startTime) / WIDTH_TRANSITION_MS);
+        const target = contentLeftOf(tab) - REST_OFFSET;
+        track.scrollLeft = startLeft + (target - startLeft) * easeOutCubic(t);
+        // Keep tracking a little past t=1 so the final frame of the CSS
+        // width transition is followed, then settle.
+        if (now - startTime < WIDTH_TRANSITION_MS + 60) {
+          animFrame = requestAnimationFrame(step);
+        } else {
+          animFrame = null;
+          settle();
+        }
+      }
+      animFrame = requestAnimationFrame(step);
+    }
+    function scrollByTab(direction){
+      const curIndex = tabs.findIndex(t => t.classList.contains('is-focused'));
+
+      // Always just one adjacent tab away — there's a clone (or the real
+      // tab) on both sides at every position. Target it directly, not
+      // its real mirror: the mirror sits a full set-width further along
+      // in the DOM (forward for a leading clone, backward for a
+      // trailing one), so redirecting the scroll toward it means a
+      // short one-tab hop turns into a scroll nearly the width of the
+      // whole set, in the wrong direction relative to what was
+      // clicked — that's what an "overshoot" going backward actually
+      // was. handleLoop (below) does the real-tab hand-off once this
+      // settles, entirely via scrollLeft/focus, with no extra scrolling.
+      const baseIndex = curIndex === -1 ? setCount : curIndex;
+      let nextIndex = baseIndex + direction;
+      if (nextIndex < 0) nextIndex = 0;
+      if (nextIndex > tabs.length - 1) nextIndex = tabs.length - 1;
+      if (nextIndex === curIndex) return;
+      const nextTab = tabs[nextIndex];
+
+      // CSS scroll-snap (mandatory) can re-assert itself against a
+      // programmatic scroll while the content it's snapping against is
+      // simultaneously resizing (the outgoing/incoming tab's width
+      // transition) — the two disagreeing about where things should
+      // land is a very plausible source of an overshoot-then-correct
+      // right at the end. Switching snap off for the duration of this
+      // click's scroll+resize removes that fight entirely; it's turned
+      // back on once everything has actually settled, at which point
+      // there's nothing left to correct.
+      track.style.scrollSnapType = 'none';
+
+      suppressAutoFocus = true;
+      clearTimeout(settleTimer);
+      setFocusIndex(nextIndex);
+      animateToTab(nextTab);
+    }
+
+    function syncFocus(){
+      if (suppressAutoFocus) return;
+      const trackLeft = track.getBoundingClientRect().left;
+      let closest = null, closestDist = Infinity;
+      tabs.forEach(tab => {
+        const dist = Math.abs(tab.getBoundingClientRect().left - trackLeft);
+        if (dist < closestDist) { closestDist = dist; closest = tab; }
+      });
+      tabs.forEach(tab => tab.classList.toggle('is-focused', tab === closest));
+    }
+
+    if (prevBtn) prevBtn.addEventListener('click', () => scrollByTab(-1));
+    if (nextBtn) nextBtn.addEventListener('click', () => scrollByTab(1));
+
+    // Jumping scrollLeft mid-scroll (whether a live drag/wheel gesture or
+    // the native smooth-scroll from a button click) fights the gesture
+    // itself — an instant rewind while something is still actively
+    // scrolling reads as a stutter, worst right around the loop boundary
+    // (i.e. near the first tab, where the rewind actually happens). So
+    // the rewind waits until scrolling has actually settled (no further
+    // scroll events for a beat) rather than checking on every tick —
+    // harmless, since the clone is identical either way, so the jump is
+    // invisible whenever it happens. The same settle point also lifts
+    // the button-click focus suppression above, and does one final
+    // syncFocus() to confirm — by then the scroll has actually finished,
+    // so it always agrees with what we preset; organic drags never touch
+    // suppressAutoFocus at all, so this is a no-op for them.
+    let settleTimer = null;
+    function settle(){
+      handleLoop();
+      suppressAutoFocus = false;
+      track.style.scrollSnapType = '';
+      syncFocus();
+    }
+    let scrollTicking = false;
+    track.addEventListener('scroll', () => {
+      if (ignoreNextScroll) { ignoreNextScroll = false; return; }
+      // Our own button animation is writing scrollLeft; it settles itself.
+      if (animFrame) return;
+
+      if (scrollTicking) return;
+      scrollTicking = true;
+      requestAnimationFrame(() => {
+        syncFocus();
+        scrollTicking = false;
+      });
+
+      clearTimeout(settleTimer);
+      settleTimer = setTimeout(settle, WIDTH_TRANSITION_MS + 80);
+    }, { passive: true });
+
+    // Start on the first real tab (not the leading clone set) — already
+    // focused/grown, with no transition on the very first paint — and
+    // land scrollLeft exactly on it.
+    track.scrollLeft = 0;
+    setFocusIndexInstant(setCount);
+    track.scrollLeft = contentLeftOf(tabs[setCount]);
+
+    if (window.ResizeObserver) {
+      new ResizeObserver(syncFocus).observe(track);
+    } else {
+      window.addEventListener('resize', syncFocus);
+    }
+  })();
+</script>
+
+<script>
+  // Random-interval flicker for .subtitle-glitch — re-queries the DOM
+  // each tick rather than holding a reference, since the subtitle text
+  // (and this span along with it) gets replaced whenever the story
+  // crossfades to a different step; this way the loop just quietly
+  // no-ops while the phrase isn't currently on screen, and picks back
+  // up automatically once it is again.
+  (function(){
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    function flashOnce(el, ms){
+      el.classList.add('is-flashing');
+      setTimeout(() => el.classList.remove('is-flashing'), ms);
+    }
+    function scheduleFlicker(){
+      // Skewed toward short gaps (Math.random()*Math.random() biases
+      // low) but with occasional long, quiet stretches — a plain
+      // uniform range still reads as "on a timer" once you watch it for
+      // a bit; this doesn't.
+      const delay = 200 + Math.random() * Math.random() * 7000;
+      setTimeout(() => {
+        const el = document.querySelector('.subtitle-glitch');
+        if (el) {
+          flashOnce(el, 40 + Math.random() * 220);
+          // sometimes a quick second blip right on the heels of the first
+          if (Math.random() < 0.35) {
+            setTimeout(() => flashOnce(el, 30 + Math.random() * 150), 90 + Math.random() * 140);
+          }
+        }
+        scheduleFlicker();
+      }, delay);
+    }
+    scheduleFlicker();
+  })();
+</script>
+
+<script>
+  const revealSections = document.querySelectorAll('.hero, .panel, .team-section, footer, .divider-black');
+  const revealObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold:0.12 });
+
+  revealSections.forEach(section => revealObserver.observe(section));
+
+  const titleXlTyped = document.getElementById('titleXlTyped');
+  const titleXlWords = ['coach', 'spotter', 'trainer', 'partner'];
+  let titleXlWordIndex = 0;
+  let titleXlLetterIndex = titleXlWords[0].length;
+  let titleXlDeleting = true;
+
+  function typeTitleXlWord(){
+    const currentWord = titleXlWords[titleXlWordIndex];
+    if (titleXlDeleting) {
+      titleXlTyped.classList.add('is-fading');
+      titleXlLetterIndex -= 1;
+      titleXlTyped.textContent = currentWord.slice(0, titleXlLetterIndex);
+      if (titleXlLetterIndex === 0) {
+        titleXlDeleting = false;
+        titleXlWordIndex = (titleXlWordIndex + 1) % titleXlWords.length;
+        setTimeout(typeTitleXlWord, 350);
+        return;
+      }
+    } else {
+      const nextWord = titleXlWords[titleXlWordIndex];
+      titleXlTyped.classList.remove('is-fading');
+      titleXlLetterIndex += 1;
+      titleXlTyped.textContent = nextWord.slice(0, titleXlLetterIndex);
+      if (titleXlLetterIndex === nextWord.length) {
+        titleXlDeleting = true;
+        setTimeout(typeTitleXlWord, 1800);
+        return;
+      }
+    }
+    setTimeout(typeTitleXlWord, titleXlDeleting ? 65 : 95);
+  }
+
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    setTimeout(typeTitleXlWord, 1800);
+  }
+
+  const panel = document.getElementById('storyPanel');
+  const titleEl = document.getElementById('storyTitle');
+  const steps = document.querySelectorAll('.story-step');
+  let current = 0;
+
+  /* Single traveling background photo, shared by the "Wear it." title and
+     the metrics panel below it — one element physically moving, not two
+     separate ones handing off. Seeded once from the step's own data
+     attribute (its title is likewise set directly below rather than via
+     the queue, since nothing has scrolled yet). */
+  const travelingBg = document.getElementById('travelingBgImage');
+  const travelingBgFade = document.getElementById('travelingBgFade');
+  const MASK_OPACITY = 0.26; // the "mask" behind "Wear it." — photo reads as a faint texture, not a full image
+  const REVEALED_OPACITY = 0.8; // full strength, once panned into the metrics panel — the mask goes away
+  const firstStepImage = steps[0] && steps[0].dataset.bgImage;
+  if (travelingBg && firstStepImage) {
+    travelingBg.style.backgroundImage = `url("${firstStepImage}")`;
+  }
+
+  /* Scroll-linked travel, in three phases:
+     1) Entrance — while the sticky panel is still scrolling up into place
+        (before it locks at the top), only the portion of it that has
+        actually scrolled into view is revealed, via clip-path, like a
+        curtain rising from the bottom of the screen. It reaches fully
+        revealed exactly when the panel locks — you only ever see "the
+        full version" once you've fully scrolled down to it.
+     2) Pan — once locked, over the "Wear it." step's own viewport-height
+        of scroll, the (now fully revealed) photo slides left — held at
+        the same vertical level throughout — landing halfway across. The
+        low-opacity "mask" over the photo fades away in step with this
+        same pan, so it's at full strength (no overlay) by the time it
+        settles. It then just stays there, panned and paused, for the
+        "Move it." title/step that follows — a second title section, like
+        "Wear it." itself, sharing the same sticky panel and pin duration.
+     3) Exit — once you start scrolling the "Move it." step itself out of
+        view (heading to the next real section), the photo continues
+        sliding left the rest of the way off-screen, but over a much
+        shorter scroll distance than phase 2 — so it visibly moves faster
+        — and is fully gone well before the next section is in view.
+     Visibility itself is a hard on/off (no fade) exactly while the story
+     section is on screen — never lingering over any other part of the
+     page. Everything is driven straight off scroll position rather than a
+     fixed-duration animation, so it always lines up exactly with where
+     you are on the page. */
+  const panReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const panStep = steps[0]; // "Wear it." — drives the entrance + main pan
+  const lastPanStep = steps[steps.length - 1]; // "Move it." — drives the fast exit
+  const storyEl2 = document.getElementById('story');
+  const EXIT_SPEED_FACTOR = 0.35; // exit pan completes within this fraction of the last step's own scroll-out distance — the smaller, the faster
+  function updateBgPan(){
+    if (!travelingBg || !panStep || !lastPanStep || !storyEl2) return;
+    const storyRect = storyEl2.getBoundingClientRect();
+
+    let enterProgress = 1; // 0 = not yet scrolled into view at all, 1 = sticky panel fully locked in place
+    let p = 0; // 0..1 through the pan, once locked
+    let exitProgress = 0; // 0..1 sliding the rest of the way off-screen, once the last step starts scrolling away
+    if (!panReduceMotion.matches) {
+      enterProgress = Math.min(1, Math.max(0, (window.innerHeight - storyRect.top) / window.innerHeight));
+      const rect = panStep.getBoundingClientRect();
+      p = Math.min(1, Math.max(0, -rect.top / rect.height));
+      const lastRect = lastPanStep.getBoundingClientRect();
+      exitProgress = Math.min(1, Math.max(0, -lastRect.top / (lastRect.height * EXIT_SPEED_FACTOR)));
+    }
+
+    const panTransform = `translateX(${-50 * p - 50 * exitProgress}%)`;
+    travelingBg.style.transform = panTransform;
+    travelingBg.style.clipPath = `inset(${(1 - enterProgress) * 100}% 0 0 0)`;
+
+    // the mask fades out in step with the pan — dim behind "Wear it.", full
+    // strength by the time it's settled into place for "Move it."
+    const revealedOpacity = MASK_OPACITY + (REVEALED_OPACITY - MASK_OPACITY) * p;
+    const active = storyRect.top < window.innerHeight && storyRect.bottom > 0;
+    travelingBg.style.opacity = active ? String(revealedOpacity) : '0';
+
+    // the edge-fade rides along with the photo, only showing up once the
+    // pan is actually underway (invisible during the plain "Wear it." view)
+    if (travelingBgFade) {
+      travelingBgFade.style.transform = panTransform;
+      travelingBgFade.style.opacity = active ? String(p) : '0';
+    }
+  }
+  updateBgPan();
+  window.addEventListener('scroll', updateBgPan, { passive: true });
+  window.addEventListener('resize', updateBgPan);
+
+  const BASE_DURATION = 550; // ms, at normal scroll speed
+  const MIN_FACTOR = 0.1;    // fast scroll can compress transitions down to 10% of normal speed
+  const MIN_DWELL = 5;       // ms each settled title is guaranteed to hold before advancing
+
+  function setTiming(el, duration){
+    el.style.transition = `transform ${duration}ms cubic-bezier(.33,.1,.2,1), opacity ${Math.round(duration*0.85)}ms ease`;
+  }
+
+  const subtitleEl = document.getElementById('storySubtitle');
+  const galleryEl = document.querySelector('.story-gallery');
+  titleEl.textContent = 'Wear it.';
+  if (subtitleEl) subtitleEl.innerHTML = steps[0] ? (steps[0].dataset.subtitle || '') : '';
+
+  /* Queue: every triggered step plays its full transition, in order.
+     If scroll outruns the animation, the queue backs up and we speed
+     the transition up (never skip it) so it still completes each step. */
+  const queue = [];
+  let animating = false;
+  let queueTailIndex = 0; // the index the panel will show once the queue drains
+
+  function enqueue(index, text, subtitle, bgImage){
+    if (index === queueTailIndex) return;
+    queue.push({ index, text, subtitle, bgImage });
+    queueTailIndex = index;
+    processQueue();
+  }
+
+  // Crossfades one title/subtitle element: drifts up and away, then the
+  // next text rises up into center from below — same choreography for
+  // both elements so they always move together.
+  function crossfadeText(el, text, duration){
+    el.style.setProperty('--exit-y', '-38px');
+    el.style.setProperty('--enter-y', '30px');
+    setTiming(el, duration);
+    el.classList.add('out');
+
+    setTimeout(() => {
+      // innerHTML, not textContent: the subtitle can embed an inline
+      // .subtitle-glitch span (see CSS) — safe here since this only
+      // ever receives our own fixed copy, never user input.
+      el.innerHTML = text || '';
+      el.style.transition = 'none';
+      el.classList.remove('out');
+      el.classList.add('enter-start');
+      void el.offsetWidth; // force the no-transition jump to commit before re-enabling transition
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setTiming(el, duration);
+          el.classList.remove('enter-start');
+        });
+      });
+    }, duration + 40);
+  }
+
+  function processQueue(){
+    if (animating || queue.length === 0) return;
+    animating = true;
+    const { index, text, subtitle, bgImage } = queue.shift();
+    current = index;
+
+    // faster scrolling = faster (but still complete) transition
+    // speed is driven directly by how fast you're actually scrolling right now
+    // (the gap between the smoothed position and the target is a live velocity signal)
+    const gap = Math.abs(targetScroll - currentScroll);
+    const maxGapForFullSpeed = 180; // px of lerp lag needed to hit max speed
+    const speedRatio = Math.min(1, gap / maxGapForFullSpeed);
+    const factor = 1 - speedRatio * (1 - MIN_FACTOR);
+    const duration = BASE_DURATION * factor;
+
+    // only swap the traveling photo if this step actually brings a new one —
+    // a step with no data-bg-image (like "Know it all!") just keeps showing
+    // whatever photo is already there, already panned into its resting spot
+    if (travelingBg && bgImage) travelingBg.style.backgroundImage = `url("${bgImage}")`;
+
+    crossfadeText(titleEl, text, duration);
+    if (subtitleEl) crossfadeText(subtitleEl, subtitle, duration);
+
+    // The gallery rises/fades exactly like the title and subtitle do —
+    // same choreography, driven in lockstep with them, rather than a
+    // width-based slide. Leaving the gallery step: it fades+rises out
+    // starting now (matching the outgoing title's own exit), and the
+    // two-column layout only collapses afterward, once it's already
+    // invisible, so the sudden layout snap is never actually seen.
+    // Entering it: the layout reserves space at the same moment the new
+    // title swaps in, and the gallery rises+fades in right alongside it.
+    if (index !== 1 && galleryEl) {
+      galleryEl.style.setProperty('--exit-y', '-38px');
+      setTiming(galleryEl, duration);
+      galleryEl.classList.add('out');
+    }
+    setTimeout(() => {
+      panel.classList.toggle('is-gallery-step', index === 1);
+      if (index === 1 && galleryEl) {
+        galleryEl.style.setProperty('--enter-y', '30px');
+        galleryEl.style.transition = 'none';
+        galleryEl.classList.add('enter-start');
+        void galleryEl.offsetWidth; // flush the no-transition jump before re-enabling it
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setTiming(galleryEl, duration);
+            galleryEl.classList.remove('enter-start');
+          });
+        });
+      } else if (galleryEl) {
+        galleryEl.classList.remove('out');
+      }
+    }, duration + 40);
+
+    const exitTotal = duration + 40;
+    const enterTotal = duration + 40;
+    setTimeout(() => {
+      animating = false;
+      processQueue();
+    }, exitTotal + enterTotal + MIN_DWELL);
+  }
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const idx = Array.from(steps).indexOf(e.target);
+        enqueue(idx, e.target.dataset.title, e.target.dataset.subtitle, e.target.dataset.bgImage);
+      }
+    });
+  }, { threshold: 0.55 });
+
+  steps.forEach(s => io.observe(s));
+
+  /* First entry into the section: show just the background for a
+     beat, then reveal the first title with the normal rise-in. */
+  const INTRO_DELAY = 100; // ms of background-only before the first title appears
+  const introObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        introObserver.disconnect();
+        setTimeout(() => {
+          setTiming(titleEl, BASE_DURATION);
+          titleEl.classList.remove('enter-start');
+        }, INTRO_DELAY);
+      }
+    });
+  }, { threshold: 0.1 });
+  introObserver.observe(document.querySelector('.story'));
+
+  /* Continuous smooth scroll — inertia-style easing every frame instead of hard jumps between sections */
+  let currentScroll = window.scrollY;
+  let targetScroll = window.scrollY;
+  let ticking = false;
+
+  function maxScroll(){
+    return document.documentElement.scrollHeight - window.innerHeight;
+  }
+
+  function clamp(v, min, max){
+    return Math.max(min, Math.min(max, v));
+  }
+
+  const storyEl = document.querySelector('.story');
+  const afterStoryEl = storyEl.nextElementSibling; // the coach (divider) section right after the story section
+
+  function scrollLockBoundary(){
+    const afterStoryTop = afterStoryEl.getBoundingClientRect().top + window.scrollY;
+    return afterStoryTop - window.innerHeight; // the next section can't enter the viewport at all until this clears
+  }
+
+  window.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    // if something else moved the page (keyboard, drag), resync before applying delta
+    if (Math.abs(window.scrollY - currentScroll) > 3) {
+      currentScroll = window.scrollY;
+      targetScroll = window.scrollY;
+    }
+    let next = clamp(targetScroll + e.deltaY, 0, maxScroll());
+
+    // don't let scroll carry past the end of the title section
+    // while any title is still queued or mid-transition
+    if ((animating || queue.length > 0) && next > scrollLockBoundary() - 2) {
+      next = Math.min(next, scrollLockBoundary() - 2);
+    }
+
+    targetScroll = next;
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(smoothScrollTick);
+    }
+  }, { passive: false });
+
+  function smoothScrollTick(){
+    currentScroll += (targetScroll - currentScroll) * 0.11;
+    if (Math.abs(targetScroll - currentScroll) < 0.4) {
+      currentScroll = targetScroll;
+      window.scrollTo(0, currentScroll);
+      ticking = false;
+      return;
+    }
+    window.scrollTo(0, currentScroll);
+    requestAnimationFrame(smoothScrollTick);
+  }
+
+  /* Universal backstop: whatever caused the scroll (touch swipe, keyboard,
+     scrollbar drag, or the wheel engine above), snap back to the boundary
+     if it crossed while the title queue still has work left. */
+  window.addEventListener('scroll', () => {
+    if (!(animating || queue.length > 0)) return;
+    const bound = scrollLockBoundary() - 2;
+    if (window.scrollY > bound) {
+      window.scrollTo(0, bound);
+      currentScroll = bound;
+      targetScroll = bound;
+    }
+  }, { passive: true });
+</script>
+
+</body>
+</html>
