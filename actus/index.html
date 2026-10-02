@@ -123,7 +123,11 @@
   }
   .hero-left{
     position:relative; z-index:1;
-    transform:translateY(-34px);
+    /* Pulled left, away from the 3D sensor, out to the page margin: on
+       wide screens its left edge lines up with the navbar's ACTUS logo
+       (40px from the edge); on narrower ones it shifts 40px (as much as
+       the side padding allows). */
+    transform:translate(calc(-1 * max(40px, (100vw - 1140px) / 2 - 300px)), -80px);
     display:flex; flex-direction:column; align-items:flex-start;
     text-align:left; flex:1 1 480px; min-width:0;
   }
@@ -131,6 +135,12 @@
     font-size:clamp(44px, 5vw, 88px);
     font-weight:800; line-height:1; letter-spacing:-0.03em;
     color:var(--ink);
+  }
+  /* "smartest" + typed word always share the second line */
+  .title-xl-line2{ white-space:nowrap; }
+  /* on phones, scale with the viewport so the unbreakable second line still fits */
+  @media (max-width:480px){
+    .title-xl{ font-size:9vw; }
   }
   .title-xl-typed{
     display:inline-block;
@@ -236,7 +246,7 @@
 
   @media (max-width:860px){
     .hero{ flex-direction:column; text-align:center; padding:60px 32px; }
-    .hero-left{ align-items:center; text-align:center; }
+    .hero-left{ align-items:center; text-align:center; transform:translateY(-34px); }
     .hero-right{ order:-1; flex:0 0 auto; max-width:260px; }
   }
 
@@ -493,9 +503,14 @@
     position:absolute; inset:0; z-index:0;
     pointer-events:none;
   }
+  /* Videos stacked; only the one matching the active coach card shows,
+     crossfading when the card switches (see the coach-cards script). */
   .divider-bg video{
+    position:absolute; inset:0;
     display:block; width:100%; height:100%; object-fit:cover;
+    opacity:0; transition:opacity 0.8s ease;
   }
+  .divider-bg video.is-active{ opacity:1; }
   .divider-bg::after{
     content:''; position:absolute; inset:0;
     background:rgba(0,0,0,0.65);
@@ -513,23 +528,61 @@
     letter-spacing:-0.02em; line-height:1.15; color:#fff;
     margin-bottom:50px;
   }
-  .coach-list{
-    list-style:none;
-    display:flex; flex-direction:column; gap:22px;
+  /* Two feature cards side by side. The active one is wider (flex-grow)
+     and brighter, and its bar fills over COACH_CARD_MS (JS below); when
+     full, the other card takes over. Clicking a card jumps to it. */
+  .coach-cards{
+    display:flex; gap:20px; align-items:stretch;
   }
-  .coach-list li{
-    position:relative; padding-left:26px;
-    font-size:clamp(18px, 1.9vw, 23px); font-weight:500; line-height:1.4;
-    color:rgba(255,255,255,0.82);
-    text-align:left;
+  .coach-card{
+    flex:1 1 0; min-width:0;
+    display:flex; flex-direction:column;
+    padding:28px 28px 24px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.12);
+    color:#fff; cursor:pointer;
+    transition:flex-grow 0.8s cubic-bezier(.22,.61,.36,1), background 0.5s ease, border-color 0.5s ease;
   }
-  .coach-list li::before{
-    content:''; position:absolute; left:0; top:0.5em;
-    width:8px; height:8px; border-radius:50%;
-    background:#fff;
+  .coach-card.is-active{
+    flex-grow:2;
+    background:rgba(255,255,255,0.1);
+    border-color:rgba(255,255,255,0.28);
   }
+  .coach-card-title{
+    font-size:clamp(22px, 2.2vw, 32px); font-weight:600;
+    letter-spacing:-0.01em; line-height:1.15;
+    opacity:0.6; transition:opacity 0.5s ease;
+  }
+  .coach-card-text{
+    margin-top:10px;
+    font-size:clamp(15px, 1.4vw, 18px); line-height:1.45;
+    color:rgba(255,255,255,0.75);
+    opacity:0.6; transition:opacity 0.5s ease;
+  }
+  .coach-card.is-active .coach-card-title,
+  .coach-card.is-active .coach-card-text{ opacity:1; }
+  .coach-card-bar{
+    margin-top:auto; padding-top:22px;
+  }
+  .coach-card-bar::before{ /* the track */
+    content:''; display:block; height:3px; border-radius:3px;
+    background:rgba(255,255,255,0.18);
+  }
+  .coach-card-bar span{ /* the fill, drawn over the track */
+    display:block; height:3px; border-radius:3px; margin-top:-3px;
+    width:0; background:#fff;
+  }
+  .coach-card.is-active .coach-card-bar span{
+    animation:coachCardFill var(--coach-card-ms, 10s) linear forwards;
+  }
+  .coach-cards.is-paused .coach-card-bar span{ animation-play-state:paused; }
+  @keyframes coachCardFill{ from{ width:0; } to{ width:100%; } }
   @media (max-width:1000px){
     .coach-title{ white-space:normal; text-align:center; font-size:clamp(34px, 8vw, 60px); }
+  }
+  @media (max-width:700px){
+    .coach-cards{ flex-direction:column; }
   }
 
   /* CAPABILITY — a static bento-style grid of 10 sport photos, each tile
@@ -691,7 +744,7 @@
 <section class="hero" id="top">
   <canvas class="hero-emg-bg" id="heroEmgCanvas" aria-hidden="true"></canvas>
   <div class="hero-left">
-    <span class="title-xl" aria-label="Meet your smartest coach.">Meet your smartest <span class="title-xl-typed" id="titleXlTyped">coach</span></span>
+    <span class="title-xl" aria-label="Meet your smartest coach.">Meet your<br><span class="title-xl-line2">smartest <span class="title-xl-typed" id="titleXlTyped">coach</span></span></span>
     <span class="hero-subtitle">Realtime EMG biowearable</span>
   </div>
   <div class="hero-right">
@@ -738,15 +791,24 @@
 
 <section class="divider-black">
   <div class="divider-bg" aria-hidden="true">
-    <video src="assets/haptic1.mp4" autoplay muted loop playsinline></video>
+    <!-- One video per coach card, same order; the active card's video fades in -->
+    <video class="is-active" src="assets/haptic1.mp4" autoplay muted loop playsinline></video>
+    <video src="assets/AI1.mp4" muted loop playsinline preload="auto"></video>
   </div>
   <div class="coach-stage">
     <span class="coach-title">And it coaches you in return!</span>
-    <ul class="coach-list">
-      <li>Haptic system for movement correction</li>
-      <li>Haptic counter for rep count</li>
-      <li>AI coach</li>
-    </ul>
+    <div class="coach-cards" id="coachCards">
+      <article class="coach-card is-active">
+        <h3 class="coach-card-title">Haptic system</h3>
+       <p class="coach-card-text">Direct feedback on your movement to your tactile senses.</p>  <!--  //  Also counting your reps! -->
+        <div class="coach-card-bar" aria-hidden="true"><span></span></div>
+      </article>
+      <article class="coach-card">
+        <h3 class="coach-card-title">Talkable AI!</h3>
+        <p class="coach-card-text">An AI coach you can simply talk to through your earpods while practicing. </p> <!--  //  It will also optimize your training based on your performance and goals. -->
+        <div class="coach-card-bar" aria-hidden="true"><span></span></div>
+      </article>
+    </div>
   </div>
 </section>
 
@@ -777,7 +839,7 @@
       <span class="team-degree">BSc, Electrical Engineering</span>
     </article>
     <article class="team-member">
-      <span class="team-name">Ali Taffakor</span>
+      <span class="team-name">Ali Tafakkor</span>
       <span class="team-degree">MSc, Neuroscience</span>
       <span class="team-degree">BSc, Electrical Engineering</span>
     </article>
@@ -1003,7 +1065,7 @@
 
     const LINE_COUNT = 16;
     const COLOR = '10,10,10';
-    const OPACITY_RANGE = [0.04, 0.08];
+    const OPACITY_RANGE = [0.04, 0.1];
     const LINEWIDTH_RANGE = [0.5, 1];
     const SPEED = 0.012; // px of phase per ms — very slow pan
 
@@ -1487,7 +1549,7 @@
   revealSections.forEach(section => revealObserver.observe(section));
 
   const titleXlTyped = document.getElementById('titleXlTyped');
-  const titleXlWords = ['coach', 'spotter', 'trainer', 'partner'];
+  const titleXlWords = ['coach', 'spotter', 'trainer'];
   let titleXlWordIndex = 0;
   let titleXlLetterIndex = titleXlWords[0].length;
   let titleXlDeleting = true;
@@ -1522,9 +1584,49 @@
     setTimeout(typeTitleXlWord, 1800);
   }
 
+  /* Coach section cards: the active card's bar fills over COACH_CARD_MS
+     (a CSS animation); when it ends, the next card becomes active — wider,
+     brighter, and its own bar starts from empty. Clicking a card makes it
+     active right away. Paused while the section is off screen. */
+  (function(){
+    const wrap = document.getElementById('coachCards');
+    if (!wrap) return;
+    const COACH_CARD_MS = 10000;
+    wrap.style.setProperty('--coach-card-ms', COACH_CARD_MS + 'ms');
+    const cards = Array.from(wrap.querySelectorAll('.coach-card'));
+    // Background videos, one per card in the same order (haptic, AI).
+    const videos = Array.from(document.querySelectorAll('.divider-bg video'));
+    function activate(idx){
+      cards.forEach((card, i) => card.classList.toggle('is-active', i === idx));
+      videos.forEach((video, i) => {
+        const on = i === idx;
+        video.classList.toggle('is-active', on);
+        if (on) {
+          video.currentTime = 0; // each card's video starts from the beginning
+          const p = video.play();
+          if (p && p.catch) p.catch(() => {}); // ignore autoplay refusals
+        } else {
+          // pause once it has faded out (matches the CSS opacity transition)
+          setTimeout(() => { if (!video.classList.contains('is-active')) video.pause(); }, 800);
+        }
+      });
+    }
+    cards.forEach((card, i) => {
+      card.querySelector('.coach-card-bar span')
+        .addEventListener('animationend', () => activate((i + 1) % cards.length));
+      card.addEventListener('click', () => {
+        if (!card.classList.contains('is-active')) activate(i);
+      });
+    });
+    new IntersectionObserver((entries) => {
+      entries.forEach(e => wrap.classList.toggle('is-paused', !e.isIntersecting));
+    }, { threshold:0.2 }).observe(wrap);
+  })();
+
   const panel = document.getElementById('storyPanel');
   const titleEl = document.getElementById('storyTitle');
   const steps = document.querySelectorAll('.story-step');
+  const STEP_TRIGGER = 0.55; // how much of a step must be on screen for its title to take over
   let current = 0;
 
   /* Single traveling background photo, shared by the "Wear it." title and
@@ -1580,8 +1682,11 @@
     let exitProgress = 0; // 0..1 sliding the rest of the way off-screen, once the last step starts scrolling away
     if (!panReduceMotion.matches) {
       enterProgress = Math.min(1, Math.max(0, (window.innerHeight - storyRect.top) / window.innerHeight));
-      const rect = panStep.getBoundingClientRect();
-      p = Math.min(1, Math.max(0, -rect.top / rect.height));
+      // Pan runs across the whole pinned stretch (from the moment the
+      // panel locks in to the moment it un-pins), so every bit of scroll
+      // on "Wear it." visibly moves the arm — no dead scroll before it.
+      const pinnedLength = Math.max(1, storyRect.height - window.innerHeight);
+      p = Math.min(1, Math.max(0, -storyRect.top / pinnedLength));
       const lastRect = lastPanStep.getBoundingClientRect();
       exitProgress = Math.min(1, Math.max(0, -lastRect.top / (lastRect.height * EXIT_SPEED_FACTOR)));
     }
@@ -1730,7 +1835,7 @@
         enqueue(idx, e.target.dataset.title, e.target.dataset.subtitle, e.target.dataset.bgImage);
       }
     });
-  }, { threshold: 0.55 });
+  }, { threshold: STEP_TRIGGER });
 
   steps.forEach(s => io.observe(s));
 
@@ -1764,15 +1869,68 @@
   }
 
   const storyEl = document.querySelector('.story');
-  const afterStoryEl = storyEl.nextElementSibling; // the coach (divider) section right after the story section
+  const HERO_ADVANCE_AT = 0.9; // fraction of the hero scrolled before it auto-advances to "Wear it."
+  const HERO_RETURN_AT = 0.8; // fraction scrolled back up from "Wear it." before it auto-returns to the hero
+  const HERO_ADVANCE_MS = 500; // duration of both glides (down and back up) — higher = slower
+  // (The "Wear it." → "Let it rip!" glide kicks in exactly where "Let it
+  // rip!" takes over — see letItRipScroll() / STEP_TRIGGER — not a
+  // separate fraction.)
+  const STORY_RETURN_AT = 1.0;  // fraction scrolled back up from "Let it rip!" before it glides back to "Wear it."
+  const STORY_GLIDE_MS = 500;  // duration of both "Wear it." ↔ "Let it rip!" glides — higher = slower
+  // After a glide, wheel events that are still part of the same gesture
+  // (arriving less than this far apart — a spinning wheel or trackpad
+  // momentum) are ignored, so one flick can't chain two glides. Any new
+  // scroll after a pause this long responds immediately.
+  const GESTURE_GAP_MS = 100;
+  let advancing = false;
+  let swallowGesture = false; // true from a glide's start until the gesture that caused it ends
+  let lastWheelAt = 0;
 
-  function scrollLockBoundary(){
-    const afterStoryTop = afterStoryEl.getBoundingClientRect().top + window.scrollY;
-    return afterStoryTop - window.innerHeight; // the next section can't enter the viewport at all until this clears
+  // Dedicated eased glide for the auto-advances, with its own fixed
+  // duration (independent of the general wheel easing below). Wheel
+  // input is ignored while it runs, and afterwards only until the gesture
+  // that triggered it ends (see GESTURE_GAP_MS).
+  function glideTo(to, duration){
+    advancing = true;
+    swallowGesture = true;
+    const from = window.scrollY;
+    const start = performance.now();
+    const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // easeInOutCubic
+    function step(now){
+      const t = Math.min(1, (now - start) / duration);
+      currentScroll = targetScroll = from + (to - from) * ease(t);
+      window.scrollTo(0, currentScroll);
+      if (t < 1) requestAnimationFrame(step);
+      else advancing = false;
+    }
+    requestAnimationFrame(step);
+  }
+  // Scroll position where the story panel un-pins: the background arm has
+  // fully panned to its end point and "Let it rip!" is showing.
+  function storyEndScroll(){
+    const storyTop = storyEl.getBoundingClientRect().top + window.scrollY;
+    return storyTop + storyEl.offsetHeight - window.innerHeight;
+  }
+  // Scroll position where "Let it rip!" takes over from "Wear it." (its
+  // step becomes STEP_TRIGGER on screen) — also where the glide to the end
+  // of the section kicks in, so the two always happen together. With the
+  // current layout that's 77.5% of the way through the pinned stretch.
+  function letItRipScroll(){
+    const lastStep = steps[steps.length - 1];
+    const stepTop = lastStep.getBoundingClientRect().top + window.scrollY;
+    return stepTop + lastStep.offsetHeight * STEP_TRIGGER - window.innerHeight;
   }
 
   window.addEventListener('wheel', (e) => {
     e.preventDefault();
+    const now = performance.now();
+    const gap = now - lastWheelAt;
+    lastWheelAt = now;
+    if (advancing) return; // a glide is running
+    if (swallowGesture) {
+      if (gap < GESTURE_GAP_MS) return; // still the same flick/spin that started the last glide
+      swallowGesture = false;           // a fresh scroll — handle it normally
+    }
     // if something else moved the page (keyboard, drag), resync before applying delta
     if (Math.abs(window.scrollY - currentScroll) > 3) {
       currentScroll = window.scrollY;
@@ -1780,11 +1938,52 @@
     }
     let next = clamp(targetScroll + e.deltaY, 0, maxScroll());
 
-    // don't let scroll carry past the end of the title section
-    // while any title is still queued or mid-transition
-    if ((animating || queue.length > 0) && next > scrollLockBoundary() - 2) {
-      next = Math.min(next, scrollLockBoundary() - 2);
+    // Hero → "Wear it." auto-advance: scrolling down past HERO_ADVANCE_AT
+    // of the way to the story section takes you the rest of the way on
+    // its own, via glideTo() (HERO_ADVANCE_MS sets its speed).
+    if (e.deltaY > 0) {
+      const storyTop = storyEl.getBoundingClientRect().top + window.scrollY;
+      if (currentScroll < storyTop - 1 && next >= storyTop * HERO_ADVANCE_AT) {
+        glideTo(storyTop, HERO_ADVANCE_MS);
+        return;
+      }
+      // "Wear it." → "Let it rip!": same idea inside the pinned story
+      // panel — scroll moves normally (the arm pans with it) until the
+      // point where "Let it rip!" takes over (letItRipScroll), then it
+      // glides the rest of the way, arm to its end point.
+      const storyEnd = storyEndScroll();
+      const advancePoint = letItRipScroll();
+      if (currentScroll >= storyTop - 1 && currentScroll < storyEnd - 1 && next >= advancePoint) {
+        glideTo(storyEnd, STORY_GLIDE_MS);
+        return;
+      }
     }
+    // …and the reverse: scrolling up from "Wear it." past HERO_RETURN_AT
+    // of the way back toward the hero glides the rest of the way to the
+    // top. Only fires when crossing that point, so scrolling up while
+    // already near the top of the hero stays normal.
+    if (e.deltaY < 0) {
+      const storyTop = storyEl.getBoundingClientRect().top + window.scrollY;
+      // "Let it rip!" → "Wear it.": scrolling back up from the end of the
+      // story section moves normally until you've gone STORY_RETURN_AT of
+      // the way back, then glides the rest of the way to "Wear it.".
+      const storyEnd = storyEndScroll();
+      const returnToStoryPoint = storyEnd - (storyEnd - storyTop) * STORY_RETURN_AT;
+      if (currentScroll > storyTop + 1 && currentScroll <= storyEnd + 1 && next <= returnToStoryPoint) {
+        glideTo(storyTop, STORY_GLIDE_MS);
+        return;
+      }
+      const returnPoint = storyTop * (1 - HERO_RETURN_AT);
+      if (targetScroll > returnPoint && next <= returnPoint) {
+        glideTo(0, HERO_ADVANCE_MS);
+        return;
+      }
+    }
+
+    // (No scroll lock at the end of the story section any more: it used to
+    // clamp scrolling there until the last title transition finished,
+    // which read as dead, "stuck" wheel input. A title still mid-
+    // transition just finishes as the panel scrolls away.)
 
     targetScroll = next;
     if (!ticking) {
@@ -1794,6 +1993,7 @@
   }, { passive: false });
 
   function smoothScrollTick(){
+    if (advancing) { ticking = false; return; } // glideTo() owns scrolling right now
     currentScroll += (targetScroll - currentScroll) * 0.11;
     if (Math.abs(targetScroll - currentScroll) < 0.4) {
       currentScroll = targetScroll;
@@ -1805,18 +2005,6 @@
     requestAnimationFrame(smoothScrollTick);
   }
 
-  /* Universal backstop: whatever caused the scroll (touch swipe, keyboard,
-     scrollbar drag, or the wheel engine above), snap back to the boundary
-     if it crossed while the title queue still has work left. */
-  window.addEventListener('scroll', () => {
-    if (!(animating || queue.length > 0)) return;
-    const bound = scrollLockBoundary() - 2;
-    if (window.scrollY > bound) {
-      window.scrollTo(0, bound);
-      currentScroll = bound;
-      targetScroll = bound;
-    }
-  }, { passive: true });
 </script>
 
 </body>
