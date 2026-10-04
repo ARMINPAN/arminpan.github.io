@@ -148,11 +148,35 @@
   }
   .nav-cta-pill:hover{ transform:scale(1.05); }
 
+  .nav-toggle{ display:none; }
   @media (max-width:760px){
-    .nav-links{ display:none; }
     :root{ --frame-gap:8px; --frame-radius:20px; --frame-pad-x:16px; }
     .header-wrap{ top:calc(var(--frame-gap) + 12px); }
     .site-logo{ top:calc(var(--frame-gap) + 12px); }
+    /* Phones: the bar is just Pre-order + a menu button, the same height
+       as the logo tile opposite it; the links drop down under it as a
+       black panel when the menu is open. */
+    header{ height:57px; padding:0 8px 0 10px; gap:4px; overflow:visible; }
+    .header-emg-bg{ border-radius:inherit; }
+    .nav-cta-pill{ padding:10px 16px; }
+    .nav-toggle{
+      position:relative; z-index:1;
+      display:flex; align-items:center; justify-content:center;
+      width:40px; height:40px; padding:0; border:0; border-radius:9px;
+      background:none; color:#fff; cursor:pointer;
+    }
+    .nav-links{
+      position:absolute; top:calc(100% + 8px); right:0;
+      flex-direction:column; align-items:stretch; gap:2px;
+      min-width:190px; padding:8px; margin:0;
+      border-radius:14px; background:rgba(0,0,0,0.92);
+      backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+      box-shadow:0 8px 24px rgba(0,0,0,0.18);
+      opacity:0; transform:translateY(-6px); pointer-events:none;
+      transition:opacity 0.2s ease, transform 0.25s ease;
+    }
+    .header-wrap.is-open .nav-links{ opacity:1; transform:none; pointer-events:auto; }
+    .nav-links a{ display:flex; padding:12px 14px; font-size:15px; }
   }
 
   /* HERO */
@@ -337,9 +361,15 @@
   }
 
   @media (max-width:860px){
-    .hero{ flex-direction:column; text-align:center; padding:calc(var(--frame-gap) + 52px) calc(var(--frame-gap) + 24px); }
-    .hero-left{ align-self:auto; align-items:center; text-align:center; transform:translateY(-34px); }
-    .hero-right{ order:-1; flex:0 0 auto; max-width:260px; align-self:auto; transform:translateY(-34px); }
+    /* sensor + headline as one group, centred on the screen below the
+       nav (not packed up under it, with the bottom half empty) */
+    .hero{ flex-direction:column; justify-content:center; gap:12px; text-align:center; padding:calc(var(--frame-gap) + 96px) calc(var(--frame-gap) + 24px) calc(var(--frame-gap) + 40px); }
+    /* flex:none — its desktop flex-basis (a width) would otherwise make it
+       480px tall in this column layout */
+    .hero-left{ flex:none; align-self:auto; align-items:center; text-align:center; transform:none; }
+    /* (an explicit width: as a centred flex item it would otherwise shrink
+       to its content, and the square card inside it to nothing) */
+    .hero-right{ order:-1; flex:0 0 auto; width:min(280px, 72vw); max-width:280px; align-self:auto; transform:none; }
   }
 
   /* BLACK-SCREEN SENSOR INTRO — only while <html> has .intro-on (set in
@@ -639,11 +669,16 @@
   .story-reel-interlude{
     position:absolute; left:0; top:0;
     width:min(1100px, calc(100vw - 48px)); margin:0;
+    /* (phones: narrower and smaller — see the media query below — so it
+       stays clear of the next tab peeking in at the right edge) */
     translate:-50% -50%;
     text-align:center; color:var(--ink);
     font-size:clamp(40px, 7vw, 112px); font-weight:800;
     letter-spacing:-0.03em; line-height:1.02;
     opacity:0; pointer-events:none;
+  }
+  @media (max-width:900px){
+    .story-reel-interlude{ width:calc(100vw - 170px); font-size:clamp(28px, 8vw, 44px); }
   }
   /* The focused tab's copy, along the bottom of the screen on either side
      of it: a big line bottom-left, a smaller feature note (with its icon)
@@ -976,6 +1011,11 @@
     .team-section{ padding:32px 24px 76px; }
     .team-heading{ margin-bottom:28px; }
     .team-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:28px 14px; }
+    /* an odd one out on the last row: centred under the two columns */
+    .team-member:last-child:nth-child(odd){
+      grid-column:1 / -1; justify-self:center;
+      width:calc(50% - 7px); text-align:center;
+    }
     footer{ flex-direction:column; gap:14px; text-align:center; }
     .footer-contacts{ justify-content:center; }
   }
@@ -1018,6 +1058,10 @@
       <li><a href="#story"><svg class="nav-icon" viewBox="0 0 320 130"><use href="#sensor-sketch"/></svg><span>How it works</span></a></li>
     </ul>
     <a class="nav-cta-pill" href="#preorder">Pre-order</a>
+    <!-- phones only: opens the links above as a dropdown (see the nav script) -->
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="Menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
   </header>
 </div>
 
@@ -2331,6 +2375,8 @@
       const y = window.scrollY, prev = holdLastY;
       holdLastY = y;
       if (!section || y === prev || (window.actusGliding && window.actusGliding())) return;
+      // a link jump (logo, nav) passing over the section isn't scrolling through it
+      if (performance.now() - (window.actusJumpAt || 0) < 250) return;
       const ys = cards.map((c, i) => stopAt(i));
       const hit = ys.map((v, i) => i)
         // reached or crossed since last time — but not just moving off one
@@ -2477,6 +2523,9 @@
   function storyCoreLen(storyHeight){
     return Math.max(1, storyHeight - window.innerHeight - (gallerySteps ? gallerySteps.offsetHeight : 0));
   }
+  const PAN_START = 0.04; // where "Wear it." rests (= WEAR_OUT[0] below); the pan only starts there…
+  const PAN_HOLD = 0.03;  // …plus this much more (well over the settle glide's "close enough" EDGE)
+  const NARROW_PAN_DONE = 0.5; // phones: progress by which the photo is all the way off (≈ the "Let it sense!" title landing)
   const EXIT_SPEED_FACTOR = 0.35; // exit pan completes within this fraction of the last step's own scroll-out distance — the smaller, the faster
   // 0..1: the focus reel pushing the photo the rest of the way out (set by updateReel)
   let reelBgOut = 0;
@@ -2493,13 +2542,25 @@
       // panel locks in to the moment it un-pins), so every bit of scroll
       // on "Wear it." visibly moves the arm — no dead scroll before it.
       const pinnedLength = storyCoreLen(storyRect.height);
-      p = Math.min(1, Math.max(0, -storyRect.top / pinnedLength));
+      // starts from where "Wear it." rests (PAN_START, not the very top), so
+      // the photo is exactly in place — no gap at the right edge — whenever
+      // "Wear it." is showing, including after gliding back up to it
+      // (plus PAN_HOLD of slack: resting a few px short of exactly there —
+      // close enough that the page doesn't glide the rest of the way —
+      // still shows it fully in place)
+      const from = PAN_START + PAN_HOLD;
+      p = Math.min(1, Math.max(0, (-storyRect.top / pinnedLength - from) / (1 - from)));
       // exit: once the whole section (gallery stretch included) starts
       // scrolling away — its bottom rising past the screen's bottom edge
       exitProgress = Math.min(1, Math.max(0, (window.innerHeight - storyRect.bottom) / (window.innerHeight * EXIT_SPEED_FACTOR)));
     }
 
-    const panTransform = `translateX(${-50 * p - 50 * Math.max(exitProgress, reelBgOut)}%)`;
+    // phones: no room for half a photo beside "Let it sense!" — it slides
+    // all the way off instead of parking half-way
+    // (and it's fully off by the time the "Let it sense!" title has slid in)
+    const narrowPan = window.innerWidth <= 900;
+    const pan = narrowPan ? -100 * Math.min(1, p / NARROW_PAN_DONE) : -50 * p;
+    const panTransform = `translateX(${pan - 50 * Math.max(exitProgress, reelBgOut)}%)`;
     travelingBg.style.transform = panTransform;
     travelingBg.style.clipPath = `inset(${(1 - enterProgress) * 100}% 0 0 0)`;
 
@@ -2541,7 +2602,7 @@
   const RIP_START = 0.12;  // progress where the first piece starts moving
   const RIP_STAGGER = 0.05; // progress between consecutive pieces starting
   const RIP_PIECE = 0.36;  // progress each piece takes to travel in
-  const WEAR_OUT = [0.04, 0.4]; // progress range "Wear it." drifts out over
+  const WEAR_OUT = [PAN_START, 0.4]; // progress range "Wear it." drifts out over
   const easeOut = t => 1 - Math.pow(1 - t, 3);
   const clamp01 = v => Math.min(1, Math.max(0, v));
   function ripPieces(){
@@ -2592,8 +2653,10 @@
   const REEL_BIG_H = 0.6;        // focused tab height, fraction of the screen height
   const REEL_PEEK_SCALE = 0.62;  // the next tab, waiting at the right edge, vs the focused one
   const REEL_PEEK_SHOW = 0.45;   // how much of the waiting tab shows
-  const REEL_NARROW_TOP = 200;   // phones: where the focused tab's top sits (under "Let it sense!"; the copy goes below it)
+  const REEL_NARROW_TOP = 190;    // phones: space kept above the focused tab (for "Let it sense!")…
+  const REEL_NARROW_BOTTOM = 170; // …and below it (for its copy); the tab is centred in between
   const REEL_TEXT_SCALE = 0.55;  // "Let it sense!" while it waits at the left
+  const REEL_TEXT_SCALE_NARROW = 0.8; // …on phones (smaller type to begin with — keep it readable)
   const easeInOut = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   const mix = (a, b, t) => a + (b - a) * t;
   function galleryRange(storyTop, coreLen){ // page-scroll positions [start, end]
@@ -2671,7 +2734,7 @@
     // phones: smaller, and up under "Let it sense!" so the copy fits below
     const bigH = Math.min(box.height * (narrow ? 0.42 : REEL_BIG_H), box.width * 0.62 / 0.72);
     const big = bigH / h, peek = big * REEL_PEEK_SCALE;
-    const cy = narrow ? box.top + REEL_NARROW_TOP + bigH / 2 : box.top + box.height / 2;
+    const cy = narrow ? box.top + (REEL_NARROW_TOP + box.height - REEL_NARROW_BOTTOM) / 2 : box.top + box.height / 2;
     const baseLeft = tr.left + 4, baseCy = tr.top + tr.height / 2; // a tab's untransformed spot (left:4px, centered)
     // Reel keyframes by distance from focus: -1 gone left, 0 centre, 1 peeking right, 2 gone right
     const keys = [
@@ -2750,11 +2813,15 @@
     if (ripTextCol) {
       const col = ripTextCol, content = col.parentElement;
       const left = col.offsetLeft + content.offsetLeft, top = col.offsetTop + content.offsetTop;
-      const restX = 32 - left, restY = narrow ? 92 - top : 0; // phones: up top, under the nav
+      // phones / tablets: up top, just under the logo tile
+      const logo = document.querySelector('.site-logo');
+      const underLogo = logo ? logo.getBoundingClientRect().bottom - box.top + 16 : 92;
+      const restX = 32 - left, restY = narrow ? underLogo - top : 0;
       const out = easeInOut(clamp01(f));
-      const goneX = -left - col.offsetWidth * REEL_TEXT_SCALE - 60;
+      const textScale = narrow ? REEL_TEXT_SCALE_NARROW : REEL_TEXT_SCALE;
+      const goneX = -left - col.offsetWidth * textScale - 60;
       col.style.translate = `${mix(0, restX, m) + mix(0, goneX - restX, out)}px ${mix(0, restY, m)}px`;
-      col.style.scale = String(mix(1, REEL_TEXT_SCALE, m));
+      col.style.scale = String(mix(1, textScale, m));
     }
 
     // the focused tab's copy: fades out as soon as the tab starts moving
@@ -3028,6 +3095,20 @@
   /* In-page links (logo, Home, nav, Pre-order): drop whatever scrolling
      is still queued up — wheel smoothing or a glide — before jumping,
      otherwise it drags the page straight back and the click looks dead. */
+  // Phones: the menu button opens / closes the nav links; picking one, or
+  // tapping anywhere else, closes it again
+  (function(){
+    const wrap = document.querySelector('.header-wrap');
+    const toggle = document.getElementById('navToggle');
+    if (!wrap || !toggle) return;
+    const setOpen = (on) => { wrap.classList.toggle('is-open', on); toggle.setAttribute('aria-expanded', String(on)); };
+    toggle.addEventListener('click', (e) => { e.stopPropagation(); setOpen(!wrap.classList.contains('is-open')); });
+    document.addEventListener('click', (e) => {
+      if (!wrap.classList.contains('is-open')) return;
+      if (!e.target.closest('.nav-links') || e.target.closest('a')) setOpen(false);
+    });
+  })();
+
   document.addEventListener('click', (e) => {
     const link = e.target.closest && e.target.closest('a[href^="#"]');
     if (!link || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -3039,6 +3120,7 @@
     glidePush = 0;
     const y = clamp(target.getBoundingClientRect().top + window.scrollY, 0, maxScroll());
     currentScroll = targetScroll = y; // a running smooth-scroll frame now just lands here
+    window.actusJumpAt = performance.now(); // (so nothing on the way, e.g. the coach hold, catches the jump)
     window.scrollTo(0, y);
     if (location.hash !== hash) history.pushState(null, '', hash);
   });
