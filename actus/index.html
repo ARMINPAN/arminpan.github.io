@@ -13,6 +13,10 @@
      final hero directly, exactly as without the intro. */
   if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     document.documentElement.classList.add('intro-on');
+    // Loading screen ("MEET ACTUS") until the pre-header's background video
+    // can play — only when arriving at the top (not a reload mid-page, nor
+    // a link straight to a section). See the loader script.
+    if (!location.hash || location.hash === '#intro') document.documentElement.classList.add('is-loading');
   }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,12 +50,32 @@
     --intro-shade:0.45;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
-  html{ scroll-behavior:auto; scroll-snap-type: none; scrollbar-width: thin; scrollbar-color: rgba(36,36,36,0.18) transparent; }
-
-  ::-webkit-scrollbar{ width:4px; }
-  ::-webkit-scrollbar-track{ background:transparent; }
-  ::-webkit-scrollbar-thumb{ background:rgba(36,36,36,0.18); border-radius:0; }
-  ::-webkit-scrollbar-thumb:hover{ background:rgba(36,36,36,0.32); }
+  /* No browser scrollbar at all (it took up width — and popped in after
+     the loading screen, shifting the page): a slim overlay indicator
+     stands in for it (.page-scroller, see the scroller script). */
+  html{ scroll-behavior:auto; scroll-snap-type: none; scrollbar-width:none; }
+  ::-webkit-scrollbar{ width:0; height:0; display:none; }
+  /* The overlay scroll indicator: a thin pill on the right edge, floating
+     over the page. White with difference-blending, so it reads dark on
+     the light sections and light on the dark ones. Shown while scrolling
+     (or with the mouse near the edge), fading out shortly after; the
+     wider invisible strip around it is what you grab to drag it. */
+  .page-scroller{
+    position:fixed; top:0; right:0; bottom:0; width:16px; z-index:150;
+    mix-blend-mode:difference;
+    opacity:0; transition:opacity 0.4s ease;
+  }
+  .page-scroller.is-shown, .page-scroller.is-dragging{ opacity:1; }
+  .page-scroller-thumb{
+    position:absolute; right:4px; top:0; width:4px; min-height:36px;
+    border-radius:4px; background:rgba(255,255,255,0.55);
+    transition:width 0.2s ease, background 0.2s ease;
+    cursor:default;
+  }
+  .page-scroller:hover .page-scroller-thumb, .page-scroller.is-dragging .page-scroller-thumb{ width:6px; background:rgba(255,255,255,0.8); }
+  .is-loading .page-scroller{ display:none; }
+  /* touch screens: just the indicator — nothing to grab */
+  @media (hover:none){ .page-scroller{ pointer-events:none; } }
   body{
     font-family:var(--sans);
     background:var(--bg);
@@ -472,6 +496,36 @@
     0%, 100%{ transform:translateY(0); }
     50%{ transform:translateY(7px); }
   }
+  /* Loading screen: the pre-header's own black, with "MEET ACTUS" in the
+     middle (same type as the cue below), still while the background video
+     loads. Then the words glide down onto the cue's spot; half-way there
+     the black starts fading to the pre-header, and once they land they
+     hand over to the real cue (see the loader script). Glide:
+     LOADER_GLIDE_MS, fade: LOADER_FADE_MS. */
+  .site-loader{ display:none; }
+  .is-loading .site-loader, .site-loader.is-leaving, .site-loader.is-revealing{
+    display:flex; align-items:center; justify-content:center;
+    position:fixed; inset:0; z-index:200;
+    background:#0B0B0B;
+    transition:background-color 0.8s ease;
+  }
+  .site-loader.is-leaving{ pointer-events:none; }
+  .site-loader.is-revealing{ background-color:rgba(11,11,11,0); pointer-events:none; }
+  .site-loader-text{
+    font-family:var(--sans); font-size:13px; font-weight:500;
+    letter-spacing:0.22em; text-transform:uppercase;
+    color:rgba(255,255,255,0.75);
+    /* the glide down moves it with `translate`, which stacks on top of
+       the bob (on transform) it picks up once it has landed */
+    transition:translate 1.1s cubic-bezier(.45,0,.25,1);
+  }
+  /* landed: bobbing from rest, in step with the real cue under it */
+  .site-loader.is-landed .site-loader-text{ animation:intro-cue-bob 1.8s ease-in-out infinite; }
+  /* the real cue waits (still, so the hand-over lines up) until it's done;
+     no scrolling underneath meanwhile */
+  .is-loading .intro-cue, .intro-cue.is-waiting{ visibility:hidden; }
+  .is-loading .intro-cue-text, .intro-cue.is-waiting .intro-cue-text{ animation:none; }
+  html.is-loading, html.is-loading body{ overflow:hidden; }
   .intro-title.is-glitching::before,
   .intro-title.is-glitching::after{ opacity:1; }
   .intro-shade{
@@ -563,6 +617,11 @@
     background:linear-gradient(to right, transparent 72%, var(--bg) 96%);
     opacity:0;
     z-index:-1; pointer-events:none;
+  }
+  /* phones: a much longer, softer feather (the cropped photo has no pale
+     margin of its own to blend into the page) */
+  @media (max-width:900px){
+    .traveling-bg-fade{ background:linear-gradient(to right, transparent 30%, var(--bg) 92%); }
   }
   /* Content row. "Wear it." uses it as-is: just its title, centered.
      "Let it sense!" has its own layer (.story-rip, stacked over the same
@@ -1022,6 +1081,8 @@
 </style>
 </head>
 <body>
+<!-- Loading screen (see the loader script) -->
+<div class="site-loader" id="siteLoader" aria-hidden="true"><span class="site-loader-text">Meet Actus</span></div>
 <!-- Single traveling background photo — shared between the "Wear it." title
      and the metrics panel below it; JS pans/fades it as you scroll (see the
      bottom script block). Fixed + placed first so it stacks under all real
@@ -1467,6 +1528,56 @@
     const introVideo = document.getElementById('introVideo');
     const playVideo = () => { if (introVideo && introVideo.paused) introVideo.play().catch(() => {}); };
     const pauseVideo = () => { if (introVideo && !introVideo.paused) introVideo.pause(); };
+
+    // Loading screen (see .site-loader): once the background video can
+    // play (or after LOADER_MAX_MS, whatever happens), "MEET ACTUS" glides
+    // down onto the cue's spot while the black fades, then hands over to
+    // the real cue.
+    (function(){
+      const root = document.documentElement;
+      const loader = document.getElementById('siteLoader');
+      if (!root.classList.contains('is-loading') || !loader) return;
+      const LOADER_MAX_MS = 8000;
+      const LOADER_GLIDE_MS = 1100; // words down to the cue's spot (= the CSS translate transition)
+      const LOADER_FADE_MS = 800;   // the black fading out (= the CSS background transition)…
+      const LOADER_FADE_AT = 0.5;   // …starting this far into the glide
+      const MIN_SHOW_MS = 700; // never just a flash
+      const shownAt = performance.now();
+      let done = false;
+      function reveal(){
+        if (done) return; done = true;
+        const wait = Math.max(0, MIN_SHOW_MS - (performance.now() - shownAt));
+        setTimeout(() => {
+          const text = loader.querySelector('.site-loader-text');
+          const target = document.querySelector('.intro-cue-text');
+          const cue = document.getElementById('introCue');
+          if (cue) cue.classList.add('is-waiting'); // (held still until the words land)
+          // 1) the words glide down to the cue's spot…
+          loader.classList.add('is-leaving');
+          root.classList.remove('is-loading');
+          if (text && target) {
+            const a = text.getBoundingClientRect(), b = target.getBoundingClientRect();
+            text.style.translate = `${(b.left + b.width / 2) - (a.left + a.width / 2)}px ${(b.top + b.height / 2) - (a.top + a.height / 2)}px`;
+          }
+          // 2) …half-way there, the black starts fading to the pre-header…
+          setTimeout(() => loader.classList.add('is-revealing'), LOADER_GLIDE_MS * LOADER_FADE_AT);
+          setTimeout(() => {
+            // 3) …and once they land they bob from rest — the real cue
+            //    under them starting its bob at the same instant, in step —
+            loader.classList.add('is-landed');
+            if (cue) cue.classList.remove('is-waiting');
+            // 4) …so when the fade is done, the real cue is all that's left
+            const fadeLeft = LOADER_GLIDE_MS * LOADER_FADE_AT + LOADER_FADE_MS - LOADER_GLIDE_MS;
+            setTimeout(() => loader.remove(), Math.max(0, fadeLeft) + 300);
+          }, LOADER_GLIDE_MS);
+        }, wait);
+      }
+      if (introVideo) {
+        introVideo.addEventListener('playing', reveal, { once: true });
+        introVideo.addEventListener('loadeddata', reveal, { once: true }); // e.g. autoplay refused, but it's there
+      }
+      setTimeout(reveal, LOADER_MAX_MS);
+    })();
 
     // Glitchy title (see .intro-title): at random moments — mostly short
     // gaps, now and then a long quiet one — two slices of the text jump
@@ -2339,12 +2450,23 @@
     const section = wrap.closest('.divider-black');
     if (section) section.style.setProperty('--coach-steps', cards.length - 1);
     // Page-scroll position where feature i is up: the section's top for
-    // the first, the end of its pinned stretch for the last, evenly between
+    // the first, the end of its pinned stretch for the last, evenly between.
+    // Measured against the pinned panel's own (fixed, vh-based) height, not
+    // the live window height — a phone's address bar showing / hiding
+    // changes that mid-scroll, which would shift every stop under you.
+    const pin = section && section.querySelector('.coach-pin');
     function stopAt(i){
       const top = section.getBoundingClientRect().top + window.scrollY;
-      const pinned = Math.max(1, section.offsetHeight - window.innerHeight);
+      const pinned = Math.max(1, section.offsetHeight - (pin ? pin.offsetHeight : window.innerHeight));
       return top + i / Math.max(1, cards.length - 1) * pinned;
     }
+    // Last input was a finger (a flick's coasting counts too) or a wheel /
+    // trackpad — touch gets steadier rules below: it has to really commit
+    // to a swipe before the feature changes, and nothing interrupts it.
+    let byTouch = false, touchFromY = 0;
+    window.addEventListener('touchstart', () => { byTouch = true; touchFromY = window.scrollY; }, { passive: true });
+    window.addEventListener('wheel', () => { byTouch = false; }, { passive: true });
+    const TOUCH_COMMIT = 0.25; // touch: fraction of the way to the next feature a swipe must go to switch to it
     // How far (fraction of the scroll between two features) you have to
     // scroll toward the next one before it switches — small, so the new
     // feature + video come in right as you start scrolling, not half-way
@@ -2360,21 +2482,26 @@
       const x = t * (cards.length - 1); // 0 = first feature … n-1 = last
       // heading down: the next one as soon as you're SWITCH_AT past a
       // feature; heading up: the previous one likewise
-      activate(heading > 0 ? Math.ceil(x - SWITCH_AT) : Math.floor(x + SWITCH_AT));
+      const at = byTouch ? TOUCH_COMMIT : SWITCH_AT;
+      activate(heading > 0 ? Math.ceil(x - at) : Math.floor(x + at));
     }
     update();
     // A brief hold on each feature: whenever scrolling reaches or runs
-    // over one on the way to another, the page stops right on it, and
+    // over one on the way to another (with a wheel / trackpad), the page stops right on it, and
     // scrolling on the same way is ignored for FEATURE_HOLD_MS — so a fast
     // scroll can't fly past a feature without it registering. Turning back
     // is never held, and scrolling out of the section past the first /
     // last feature never stops. (Not during a dot click's glide.)
     const FEATURE_HOLD_MS = 100;
     let holdLastY = window.scrollY;
+    // Wheel / trackpad only (byTouch, above). Finger scrolling is the
+    // browser's own: forcing the page onto a feature mid-drag or mid-flick
+    // fights the finger and feels like a lock — touch just uses the
+    // glide-on-release instead.
     function holdOnFeatures(){
       const y = window.scrollY, prev = holdLastY;
       holdLastY = y;
-      if (!section || y === prev || (window.actusGliding && window.actusGliding())) return;
+      if (!section || y === prev || byTouch || (window.actusGliding && window.actusGliding())) return;
       // a link jump (logo, nav) passing over the section isn't scrolling through it
       if (performance.now() - (window.actusJumpAt || 0) < 250) return;
       const ys = cards.map((c, i) => stopAt(i));
@@ -2424,12 +2551,19 @@
       settleTimer = setTimeout(settle, COACH_SETTLE_MS);
     }
     function settle(){
-      if (!section || touching) return;
+      if (!section || touching || window.actusDragging) return;
       if (window.actusGliding && window.actusGliding()) return; // a timed glide is landing somewhere on purpose
       const ys = cards.map((c, i) => stopAt(i));
       const y = window.scrollY;
       if (y <= ys[0] + EASE_TOL || y >= ys[ys.length - 1] - EASE_TOL) return; // not in between
       if (ys.some(v => Math.abs(y - v) <= EASE_TOL)) return; // resting on a feature
+      if (byTouch) {
+        // a finger: back to the feature the swipe started on unless it went
+        // at least TOUCH_COMMIT of the way to the next one
+        const from = ys.reduce((a, b) => Math.abs(b - touchFromY) < Math.abs(a - touchFromY) ? b : a);
+        const step = ys[1] - ys[0];
+        if (Math.abs(y - from) < TOUCH_COMMIT * step) { easeTo(Math.round(from)); return; }
+      }
       const next = dir > 0 ? ys.find(v => v > y) : [...ys].reverse().find(v => v < y);
       if (next !== undefined) easeTo(Math.round(next));
     }
@@ -2525,7 +2659,8 @@
   }
   const PAN_START = 0.04; // where "Wear it." rests (= WEAR_OUT[0] below); the pan only starts there…
   const PAN_HOLD = 0.03;  // …plus this much more (well over the settle glide's "close enough" EDGE)
-  const NARROW_PAN_DONE = 0.5; // phones: progress by which the photo is all the way off (≈ the "Let it sense!" title landing)
+  const NARROW_PAN_DONE = 0.5; // phones: progress by which the photo is gone (≈ the "Let it sense!" title landing)…
+  const NARROW_PAN_DRIFT = 45; // …and how far left (% of its width) it drifts while fading out
   const EXIT_SPEED_FACTOR = 0.35; // exit pan completes within this fraction of the last step's own scroll-out distance — the smaller, the faster
   // 0..1: the focus reel pushing the photo the rest of the way out (set by updateReel)
   let reelBgOut = 0;
@@ -2555,11 +2690,14 @@
       exitProgress = Math.min(1, Math.max(0, (window.innerHeight - storyRect.bottom) / (window.innerHeight * EXIT_SPEED_FACTOR)));
     }
 
-    // phones: no room for half a photo beside "Let it sense!" — it slides
-    // all the way off instead of parking half-way
-    // (and it's fully off by the time the "Let it sense!" title has slid in)
+    // Phones: the photo is cropped to fill the tall screen, which cuts off
+    // its own pale right side — so sliding it would drag a hard skin-to-
+    // white edge across. Instead it drifts a little way left while fading
+    // out (gone by the time "Let it sense!" has slid in), with its trailing
+    // edge feathered from the start (NARROW_PAN_* / the fade layer below).
     const narrowPan = window.innerWidth <= 900;
-    const pan = narrowPan ? -100 * Math.min(1, p / NARROW_PAN_DONE) : -50 * p;
+    const k = narrowPan ? Math.min(1, p / NARROW_PAN_DONE) : 0; // phones: 0 → 1 across the drift
+    const pan = narrowPan ? -NARROW_PAN_DRIFT * k : -50 * p;
     const panTransform = `translateX(${pan - 50 * Math.max(exitProgress, reelBgOut)}%)`;
     travelingBg.style.transform = panTransform;
     travelingBg.style.clipPath = `inset(${(1 - enterProgress) * 100}% 0 0 0)`;
@@ -2568,13 +2706,15 @@
     // strength by the time it's settled into place for "Move it."
     const revealedOpacity = MASK_OPACITY + (REVEALED_OPACITY - MASK_OPACITY) * p;
     const active = storyRect.top < window.innerHeight && storyRect.bottom > 0;
-    travelingBg.style.opacity = active ? String(revealedOpacity) : '0';
+    const fadeAway = narrowPan ? Math.pow(1 - k, 1.6) : 1; // phones: dissolving as it drifts
+    travelingBg.style.opacity = active ? String(revealedOpacity * fadeAway) : '0';
 
     // the edge-fade rides along with the photo, only showing up once the
     // pan is actually underway (invisible during the plain "Wear it." view)
     if (travelingBgFade) {
       travelingBgFade.style.transform = panTransform;
-      travelingBgFade.style.opacity = active ? String(p) : '0';
+      // (phones: straight away, so its edge is never a hard line)
+      travelingBgFade.style.opacity = active ? String(narrowPan ? Math.min(1, k * 12) : p) : '0';
     }
   }
   updateBgPan();
@@ -2899,7 +3039,10 @@
   // The same timed glide for the "Wear it." → "Let it sense!" switch: once
   // "Wear it." is in place, a scroll down plays the whole switch (up plays
   // it back) over STORY_GLIDE_MS, on the same motion curve.
-  const STORY_GLIDE_MS = 1500;
+  const STORY_GLIDE_MS = 2600;
+  // …on an even ease-in-out (the intro's curve front-loads the motion,
+  // which made this switch feel rushed even when longer)
+  const STORY_GLIDE_CURVE = [0.45, 0, 0.35, 1];
   const STORY_AUTO_GLIDE = true;
   // Pushing on hard while a glide runs: once you've scrolled this many px
   // further the same way, it hurries — finishes in GLIDE_HURRY_FACTOR of
@@ -3000,7 +3143,8 @@
     navTo = nav ? targetScroll : null;
     if (!ticking) { ticking = true; requestAnimationFrame(smoothScrollTick); }
   };
-  function startIntroGlide(to, back, fullMs, hurried = false){
+  // `curve` = [x1, y1, x2, y2] motion curve (default: the intro's)
+  function startIntroGlide(to, back, fullMs, hurried = false, curve = INTRO_GLIDE_CURVE){
     const from = window.scrollY;
     const ms = Math.max(400, fullMs * Math.abs(to - from) / Math.max(1, Math.abs(to - back)));
     // carry on at the speed you were already scrolling toward `to` (if
@@ -3010,7 +3154,7 @@
     const along = currentVelocity() * Math.sign(to - from);
     const m0 = dist > 1 ? Math.min(3, Math.max(0, along * (ms / 1000) / dist)) : 0;
     const alreadyRunning = !!introGlide;
-    introGlide = { from, to, back, fullMs, ms, m0, hurried, start: performance.now() };
+    introGlide = { from, to, back, fullMs, ms, m0, hurried, curve, ease: curve === INTRO_GLIDE_CURVE ? introGlideEase : cubicBezier(...curve), start: performance.now() };
     if (!hurried) glidePush = 0;
     if (!alreadyRunning) requestAnimationFrame(introGlideTick); // a turn-around reuses the running loop
   }
@@ -3020,7 +3164,7 @@
     const u = Math.min(1, (now - g.start) / g.ms);
     // from rest: the natural curve; already moving fast: keep that speed
     // and ease out (the bezier's own start slope is y1/x1)
-    const eased = g.m0 > INTRO_GLIDE_CURVE[1] / INTRO_GLIDE_CURVE[0] ? hermiteEase(u, g.m0) : introGlideEase(u);
+    const eased = g.m0 > g.curve[1] / g.curve[0] ? hermiteEase(u, g.m0) : g.ease(u);
     const y = g.from + (g.to - g.from) * eased;
     window.scrollTo(0, y);
     currentScroll = targetScroll = y; // keep the wheel smoothing in sync
@@ -3043,6 +3187,7 @@
 
   window.addEventListener('wheel', (e) => {
     e.preventDefault();
+    if (document.documentElement.classList.contains('is-loading')) return; // still on the loading screen
     if (performance.now() < wheelLockUntil && Math.sign(e.deltaY) === wheelLockDir) return; // holding on a coach feature
     if (e.deltaY) navTo = null; // you're scrolling yourself again
     const ib = introBounds();
@@ -3051,9 +3196,9 @@
       // carry on — and a hard push the same way hurries it (see GLIDE_HURRY_PX)
       const g = introGlide, heading = Math.sign(g.to - g.from);
       if (!e.deltaY) return;
-      if (Math.sign(e.deltaY) !== heading) { startIntroGlide(g.back, g.to, g.fullMs); return; }
+      if (Math.sign(e.deltaY) !== heading) { startIntroGlide(g.back, g.to, g.fullMs, false, g.curve); return; }
       glidePush += Math.abs(e.deltaY);
-      if (!g.hurried && glidePush > GLIDE_HURRY_PX) startIntroGlide(g.to, g.back, g.fullMs * GLIDE_HURRY_FACTOR, true);
+      if (!g.hurried && glidePush > GLIDE_HURRY_PX) startIntroGlide(g.to, g.back, g.fullMs * GLIDE_HURRY_FACTOR, true, g.curve);
       return;
     }
     const y = window.scrollY;
@@ -3063,8 +3208,8 @@
     }
     const sb = STORY_AUTO_GLIDE && e.deltaY ? storyBounds() : null;
     if (sb) {
-      if (e.deltaY > 0 && y >= sb.top - 1 && y < sb.end - 1) { startIntroGlide(sb.end, sb.top, STORY_GLIDE_MS); return; }
-      if (e.deltaY < 0 && y > sb.top + 1 && y <= sb.end + 1) { startIntroGlide(sb.top, sb.end, STORY_GLIDE_MS); return; }
+      if (e.deltaY > 0 && y >= sb.top - 1 && y < sb.end - 1) { startIntroGlide(sb.end, sb.top, STORY_GLIDE_MS, false, STORY_GLIDE_CURVE); return; }
+      if (e.deltaY < 0 && y > sb.top + 1 && y <= sb.end + 1) { startIntroGlide(sb.top, sb.end, STORY_GLIDE_MS, false, STORY_GLIDE_CURVE); return; }
     }
     // if something else moved the page (keyboard, drag), resync before applying delta
     if (Math.abs(window.scrollY - currentScroll) > 3) {
@@ -3197,7 +3342,7 @@
     function settle(){
       // a timed glide is already taking the page somewhere on purpose
       // (the intro, the story switch) — let it land
-      if (touching || panReduceMotion.matches || introGlide || navTo !== null) return;
+      if (touching || panReduceMotion.matches || introGlide || navTo !== null || window.actusDragging) return;
       let target;
       const iz = introZone();
       if (INTRO_AUTO_GLIDE && iz && iz.p > EDGE && iz.p < 1 - EDGE) {
@@ -3205,7 +3350,12 @@
       } else {
         const z = zone();
         if (z.p > z.start + EDGE && z.p < z.end - EDGE) {
-          target = Math.round(z.toScroll(lastDir > 0 ? z.end : z.start));
+          // let go mid-way through "Wear it." → "Let it sense!" (e.g. a
+          // finger): finish with the same slow timed glide a wheel plays
+          const to = Math.round(z.toScroll(lastDir > 0 ? z.end : z.start));
+          const back = Math.round(z.toScroll(lastDir > 0 ? z.start : z.end));
+          startIntroGlide(to, back, STORY_GLIDE_MS, false, STORY_GLIDE_CURVE);
+          return;
         } else {
           target = reelSnap();
           if (target === null) return; // not in between
@@ -3232,6 +3382,86 @@
     }, { passive: true });
   })();
 
+</script>
+
+<!-- Overlay scroll indicator (see .page-scroller) -->
+<div class="page-scroller" id="pageScroller" aria-hidden="true"><div class="page-scroller-thumb"></div></div>
+<script>
+  /* The overlay scroll indicator: sized and placed from the page's scroll
+     each frame it moves, shown while scrolling and for a moment after
+     (or while the mouse is near the right edge), and draggable with a
+     mouse. A drag is marked (window.actusDragging) so the page's own
+     snapping / feature holds leave it alone while you hold it. */
+  (function(){
+    const bar = document.getElementById('pageScroller');
+    const thumb = bar && bar.querySelector('.page-scroller-thumb');
+    if (!bar || !thumb) return;
+    const SHOW_FOR_MS = 900;  // stays up this long after scrolling stops
+    const EDGE_PX = 40;       // mouse this close to the right edge shows it
+    let hideTimer = null, near = false, raf = 0;
+    function metrics(){
+      const vh = window.innerHeight, doc = document.documentElement.scrollHeight;
+      const max = Math.max(1, doc - vh);
+      const h = Math.max(36, vh * vh / doc);
+      return { vh, max, h, travel: vh - h };
+    }
+    function place(){
+      raf = 0;
+      const m = metrics();
+      thumb.style.height = `${m.h}px`;
+      thumb.style.transform = `translateY(${(window.scrollY / m.max) * m.travel}px)`;
+    }
+    function show(){
+      bar.classList.add('is-shown');
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => { if (!near && !window.actusDragging) bar.classList.remove('is-shown'); }, SHOW_FOR_MS);
+    }
+    window.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(place); show(); }, { passive: true });
+    window.addEventListener('resize', () => { if (!raf) raf = requestAnimationFrame(place); });
+    place();
+    // mouse near the right edge: show it (and keep it up while there)
+    window.addEventListener('mousemove', (e) => {
+      const was = near;
+      near = window.innerWidth - e.clientX < EDGE_PX;
+      if (near) { bar.classList.add('is-shown'); clearTimeout(hideTimer); }
+      else if (was) show();
+    }, { passive: true });
+    // dragging the thumb (or clicking the strip to jump there)
+    let grabY = 0, grabScroll = 0;
+    function scrollToThumb(clientY){
+      const m = metrics();
+      const y = grabScroll + (clientY - grabY) / Math.max(1, m.travel) * m.max;
+      window.actusJumpAt = performance.now(); // (no feature holds catching it)
+      window.scrollTo(0, Math.min(m.max, Math.max(0, y)));
+    }
+    bar.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      const m = metrics(), r = thumb.getBoundingClientRect();
+      if (e.clientY < r.top || e.clientY > r.bottom) {
+        // on the strip, not the thumb: centre the thumb there first
+        grabY = r.top + r.height / 2; grabScroll = window.scrollY;
+        scrollToThumb(e.clientY);
+      }
+      grabY = e.clientY; grabScroll = window.scrollY;
+      // drop any wheel easing / glide still running, so it can't fight the drag
+      if (window.actusHoldAt) window.actusHoldAt(window.scrollY, 0, 0);
+      window.actusDragging = true;
+      bar.classList.add('is-dragging');
+      bar.setPointerCapture(e.pointerId);
+    });
+    bar.addEventListener('pointermove', (e) => { if (window.actusDragging) scrollToThumb(e.clientY); });
+    function release(){
+      if (!window.actusDragging) return;
+      window.actusDragging = false;
+      bar.classList.remove('is-dragging');
+      show();
+      // let go: the page's own snapping may now settle it (as after any scroll)
+      window.dispatchEvent(new Event('scroll'));
+    }
+    bar.addEventListener('pointerup', release);
+    bar.addEventListener('pointercancel', release);
+  })();
 </script>
 
 </body>
