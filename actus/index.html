@@ -1529,15 +1529,17 @@
     const playVideo = () => { if (introVideo && introVideo.paused) introVideo.play().catch(() => {}); };
     const pauseVideo = () => { if (introVideo && !introVideo.paused) introVideo.pause(); };
 
-    // Loading screen (see .site-loader): once the background video can
-    // play (or after LOADER_MAX_MS, whatever happens), "MEET ACTUS" glides
-    // down onto the cue's spot while the black fades, then hands over to
-    // the real cue.
+    // Loading screen (see .site-loader): "MEET ACTUS" holds for as long as
+    // the pre-header's background video needs — until it can play through
+    // without stopping to buffer AND is actually playing (its first frame
+    // drawn) — and only then glides down onto the cue's spot while the
+    // black fades, handing over to the real cue. Safety nets only: the
+    // video failing, or LOADER_GIVE_UP_MS going by.
     (function(){
       const root = document.documentElement;
       const loader = document.getElementById('siteLoader');
       if (!root.classList.contains('is-loading') || !loader) return;
-      const LOADER_MAX_MS = 8000;
+      const LOADER_GIVE_UP_MS = 30000; // last resort (a broken / stuck video) — not a timer it normally waits for
       const LOADER_GLIDE_MS = 1100; // words down to the cue's spot (= the CSS translate transition)
       const LOADER_FADE_MS = 800;   // the black fading out (= the CSS background transition)…
       const LOADER_FADE_AT = 0.5;   // …starting this far into the glide
@@ -1573,10 +1575,29 @@
         }, wait);
       }
       if (introVideo) {
-        introVideo.addEventListener('playing', reveal, { once: true });
-        introVideo.addEventListener('loadeddata', reveal, { once: true }); // e.g. autoplay refused, but it's there
+        // ready = buffered enough to play to the end without stalling, and
+        // playing (or, if the browser refuses to autoplay it, at least
+        // fully ready to show) — then wait for a frame actually on screen
+        let canPlayThrough = false, playing = false, refused = false;
+        const check = () => {
+          if (!canPlayThrough || !(playing || refused)) return;
+          if (playing && introVideo.requestVideoFrameCallback) introVideo.requestVideoFrameCallback(() => reveal());
+          else reveal();
+        };
+        const onThrough = () => { canPlayThrough = true; check(); };
+        const onPlaying = () => { playing = true; check(); };
+        introVideo.addEventListener('canplaythrough', onThrough, { once: true });
+        introVideo.addEventListener('playing', onPlaying, { once: true });
+        introVideo.addEventListener('error', reveal, { once: true });
+        if (introVideo.readyState >= 4) canPlayThrough = true; // (already there, e.g. cached)
+        if (!introVideo.paused && introVideo.currentTime > 0) playing = true;
+        const p = introVideo.play(); // (also kicks off loading; the intro script plays it too)
+        if (p && p.catch) p.catch(() => { refused = true; check(); });
+        check();
+      } else {
+        reveal();
       }
-      setTimeout(reveal, LOADER_MAX_MS);
+      setTimeout(reveal, LOADER_GIVE_UP_MS);
     })();
 
     // Glitchy title (see .intro-title): at random moments — mostly short
