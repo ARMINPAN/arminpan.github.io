@@ -1148,7 +1148,9 @@
 <div class="intro-black" id="introBlack" aria-hidden="true">
   <!-- background video (started by the intro script, so it never loads
        when the intro is off), darkened by the shade above it -->
-  <video class="intro-video" id="introVideo" src="assets/background-header.mp4" muted loop playsinline preload="none"></video>
+  <!-- a small web copy (640×360, no audio, ~170 KB) of background-header.mp4
+       (1080p, 14 MB): it's drawn at a quarter size and blurred anyway -->
+  <video class="intro-video" id="introVideo" src="assets/background-header-web.mp4" muted loop playsinline preload="none"></video>
   <div class="intro-shade"></div>
   <canvas class="intro-particles" id="introParticles"></canvas>
   <!-- glitchy centered line (glitches driven by the intro script); the
