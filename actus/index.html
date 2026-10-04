@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Strand</title>
+<title>ACTUS</title>
+<!-- the logo mark on a black rounded tile (like the nav's), so it shows on light and dark tabs -->
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <script>
   /* Black-screen sensor intro (see .intro / the intro script): switched
      on here, before first paint, so the page never flashes the finished
@@ -319,9 +321,8 @@
   }
   .hero-model{
     display:block; width:100%; height:100%;
-    cursor:grab;
+    cursor:default; /* still draggable to spin it, just no hand cursor */
   }
-  .hero-model:active{ cursor:grabbing; }
   .hero-model-status{
     position:absolute; left:18px; bottom:16px;
     font-size:11px; color:var(--gray);
@@ -534,7 +535,7 @@
     z-index:-1; pointer-events:none;
   }
   /* Content row. "Wear it." uses it as-is: just its title, centered.
-     "Let it rip!" has its own layer (.story-rip, stacked over the same
+     "Let it sense!" has its own layer (.story-rip, stacked over the same
      panel) that always holds its final two-column layout — text on one
      side, the gallery on the other. Scroll drives where each piece of it
      sits (see the story-rip script): they start off-screen to the right
@@ -567,6 +568,9 @@
   .story-rip .story-text-col{
     align-items:flex-start; flex:0 1 40%; max-width:40%;
     margin-left:10%;
+    /* sits higher than the gallery's centre line (an offset, not a
+       transform — the slide-in and the focus reel move it with translate) */
+    position:relative; top:-12vh;
   }
   .story-rip .story-gallery{
     /* Sized for the focused tab plus one small one and a bigger peek of
@@ -575,9 +579,6 @@
     flex-basis:calc(62vh + 64px); opacity:1;
     margin-right: calc(-1 * max(40px, (100vw - 1300px) / 2 + 40px));
   }
-  /* Clickable once the focused tab (and the arrows riding with it) has
-     slid into place */
-  .story-rip.is-arrived .story-gallery{ pointer-events:auto; }
   /* A perspective carousel of portrait "tabs": the focused tab sits at
      the left at full size, and each following tab to its right is a
      step smaller, a touch dimmer and tilted slightly away — like a row
@@ -602,12 +603,9 @@
     margin-top:calc(var(--tab-h) / -2);
     border-radius:16px; overflow:hidden;
     transform-origin:left center;
-    cursor:pointer;
     transition:transform 0.75s cubic-bezier(.22,.61,.36,1), opacity 0.6s ease, filter 0.75s ease;
     will-change:transform;
   }
-  .story-gallery-tab.is-focused{ cursor:default; }
-  .story-gallery-tab.is-hidden{ pointer-events:none; }
   .story-gallery-tab img, .story-gallery-tab video{
     display:block; width:100%; height:100%; object-fit:cover;
     filter:brightness(0.85);
@@ -624,6 +622,71 @@
   /* Stage wraps just the track + its two arrows, so the arrows center on
      the track's own height regardless of the scrollbar sitting below it. */
   .story-gallery-stage{ position:relative; }
+  /* Focus reel (see updateReel in the story script): once "Let it sense!"
+     has landed, further scrolling pushes the arm photo out, and the tabs
+     take over the middle of the screen one at a time — scroll-scrubbed,
+     so no CSS transitions, and no longer clipped to the gallery column. */
+  .story-rip.is-reel .story-gallery{ overflow:visible; }
+  /* will-change off: otherwise the browser keeps the tab rasterized at its
+     small size and the focused (scaled-up) one renders blurry */
+  .story-rip.is-reel .story-gallery-tab{ transition:none; will-change:auto; }
+  .story-rip .story-text-col{ transform-origin:left top; }
+  /* A big title that takes a slot in the reel of its own, just before a
+     tab (set on that tab as data-title-before), and moves along it like
+     a tab: waiting small at the right edge while the tab before is in
+     focus, centred on its own scroll stop (the next tab peeking in at
+     the right), then out past the left. Placed by updateReel. */
+  .story-reel-interlude{
+    position:absolute; left:0; top:0;
+    width:min(1100px, calc(100vw - 48px)); margin:0;
+    translate:-50% -50%;
+    text-align:center; color:var(--ink);
+    font-size:clamp(40px, 7vw, 112px); font-weight:800;
+    letter-spacing:-0.03em; line-height:1.02;
+    opacity:0; pointer-events:none;
+  }
+  /* The focused tab's copy, along the bottom of the screen on either side
+     of it: a big line bottom-left, a smaller feature note (with its icon)
+     bottom-right. --reel-side (set by updateReel) is the room left beside
+     the focused tab, so neither block ever runs under it. */
+  .story-reel-copy{
+    position:absolute; left:0; right:0; bottom:clamp(32px, 7vh, 72px);
+    padding:0 max(40px, calc((100vw - 1300px) / 2 + 40px));
+    display:flex; justify-content:space-between; align-items:flex-end; gap:24px;
+    pointer-events:none; color:var(--ink);
+  }
+  .story-reel-desc{
+    max-width:var(--reel-side, 440px); margin:0;
+    font-size:clamp(26px, 2.7vw, 42px); font-weight:800;
+    letter-spacing:-0.02em; line-height:1.1;
+    opacity:0;
+  }
+  .story-reel-feature{
+    display:flex; align-items:flex-start; gap:14px;
+    max-width:min(320px, var(--reel-side, 320px));
+    opacity:0;
+  }
+  .story-reel-feature-icon{
+    flex:0 0 auto; width:44px; height:44px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--ink); color:var(--bg);
+  }
+  .story-reel-feature-icon svg{ width:24px; height:24px; }
+  .story-reel-feature-text{
+    margin:0; font-size:14px; font-weight:500; line-height:1.5;
+    opacity:0.75;
+  }
+  @media (max-width:900px){
+    .story-reel-copy{
+      flex-direction:column; align-items:stretch; gap:14px;
+      padding:0 20px; bottom:24px;
+    }
+    .story-reel-desc{ max-width:none; font-size:24px; }
+    .story-reel-feature{ max-width:none; }
+    .story-reel-feature-icon{ width:36px; height:36px; border-radius:10px; }
+    .story-reel-feature-icon svg{ width:20px; height:20px; }
+    .story-reel-feature-text{ font-size:13px; }
+  }
   /* Small screens: text stacks above the gallery, which spans the full
      width (bleeding off the right edge like on desktop) with every tab
      scaled down so title + subtitle + gallery fit on one screen. */
@@ -632,6 +695,7 @@
     .story-gallery{ --tab-scale:0.6; }
     .story-rip .story-text-col{
       align-items:center; flex:0 0 auto; max-width:100%; margin-left:0;
+      top:0; /* stacked above the gallery already */
     }
     .story-rip .story-gallery{
       flex:0 0 auto; align-self:stretch;
@@ -676,23 +740,6 @@
   @media (max-width:900px){
     .story-rip .story-subtitle{ text-align:center; margin:20px auto 0; max-width:520px; }
   }
-  /* "Weak signal" glitch treatment for one phrase in the subtitle —
-     mostly hidden at rest (a signal that isn't coming through), with a
-     JS timer (see below) randomly flashing it to full visibility, in
-     its normal ink color, for a brief irregular moment. Genuinely
-     random timing rather than a repeating CSS animation, since a
-     fixed-duration loop inevitably starts to feel metronomic once you
-     notice the cycle. Instant on/off (no transition) so each flash
-     reads as a dropout snapping in, not a fade. */
-  .subtitle-glitch{
-    display:block;
-    margin-top:2.4em;
-    opacity:0.08;
-  }
-  .subtitle-glitch.is-flashing{ opacity:1; }
-  @media (prefers-reduced-motion: reduce){
-    .subtitle-glitch{ opacity:1; }
-  }
   .story-step{ height:100vh; scroll-snap-align: start; }
 
   .panel{ min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 40px; text-align:center; scroll-snap-align: start; }
@@ -701,11 +748,18 @@
      the white rhythm before it resumes. A full-screen video (haptic / AI,
      darkened by a black overlay) with the "coaches you in return" title
      and the current feature tucked into its bottom-left corner. The
-     feature and the video switch together every few seconds (see the
-     coach script). */
+     section pins in place while you scroll through the features — each
+     scroll brings in the next one, with its video — and lets go after
+     the last (see the coach script). */
   .divider-black{
-    position:relative; overflow:hidden;
+    position:relative;
     background:#000;
+    /* one screen, plus a stretch of pinned scroll per feature after the
+       first (--coach-steps is set by the coach script) */
+    height:calc(100vh + var(--coach-steps, 2) * var(--coach-step, 70vh));
+  }
+  .coach-pin{
+    position:sticky; top:0; overflow:hidden;
     height:100vh; min-height:560px;
     display:flex; align-items:flex-end;
     padding:0 40px 80px;
@@ -721,7 +775,7 @@
   .divider-bg video{
     position:absolute; inset:0;
     display:block; width:100%; height:100%; object-fit:cover;
-    opacity:0; transition:opacity 0.8s ease;
+    opacity:0; transition:opacity 0.4s ease;
   }
   .divider-bg video.is-active{ opacity:1; }
   .divider-bg::after{
@@ -741,13 +795,11 @@
     letter-spacing:-0.02em; line-height:1.15; color:#fff;
     margin-bottom:28px;
   }
-  /* The two features share one spot (stacked in a single grid cell);
-     only the current one shows, the other fades out as it fades in. A
-     right-pointing arrow beside it brings in the next one (see the coach
-     script). */
+  /* The features share one spot (stacked in a single grid cell);
+     only the current one shows, the others fade out as it fades in
+     (see the coach script). */
   .coach-cards{
-    display:grid; grid-template-columns:minmax(0, 470px) auto;
-    align-items:center; column-gap:22px;
+    display:grid; grid-template-columns:minmax(0, 470px);
   }
   .coach-card{
     grid-area:1 / 1;
@@ -755,41 +807,24 @@
     opacity:0; transform:translateY(10px);
     transition:opacity 0.6s ease, transform 0.8s cubic-bezier(.2,.8,.2,1);
   }
-  .coach-card.is-active{ opacity:1; transform:none; transition-delay:0.25s; }
-  .coach-next{
-    grid-area:1 / 2;
-    display:flex; align-items:center; justify-content:center;
-    width:46px; height:46px; border-radius:50%;
-    background:none; border:1px solid rgba(255,255,255,0.4);
-    color:rgba(255,255,255,0.85); cursor:pointer;
-    transition:border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+  .coach-card.is-active{ opacity:1; transform:none; transition-delay:0.1s; }
+  /* One dot per feature, centred at the very bottom of the screen; the
+     current one is the bright one. Clicking one scrolls to it. */
+  .coach-dots{
+    position:absolute; left:50%; bottom:28px; z-index:1;
+    translate:-50% 0;
+    display:flex; gap:10px;
   }
-  .coach-next{ position:relative; }
-  .coach-next svg{ transition:transform 0.25s ease; }
-  .coach-next:hover{ border-color:#fff; background:rgba(255,255,255,0.1); color:#fff; }
-  .coach-next:hover svg{ transform:translateX(3px); }
-  /* Idle attention loop (off while hovered): every few seconds the arrow
-     nudges right twice and a faint ring pulses out from the circle. */
-  .coach-next:not(:hover) svg{ animation:coach-next-nudge 3.2s ease-in-out infinite; }
-  .coach-next::after{
-    content:''; position:absolute; inset:-1px; border-radius:50%;
-    border:1px solid rgba(255,255,255,0.5);
-    opacity:0; pointer-events:none;
-    animation:coach-next-ping 3.2s ease-out infinite;
+  .coach-dot{
+    width:8px; height:8px; padding:0; border:0; border-radius:50%;
+    background:#fff; opacity:0.3;
+    cursor:pointer;
+    transition:opacity 0.4s ease, transform 0.4s ease;
   }
-  .coach-next:hover::after{ animation:none; }
-  @keyframes coach-next-nudge{
-    0%, 62%, 100%{ transform:translateX(0); }
-    70%{ transform:translateX(4px); }
-    78%{ transform:translateX(0); }
-    86%{ transform:translateX(3px); }
-    94%{ transform:translateX(0); }
-  }
-  @keyframes coach-next-ping{
-    0%, 62%{ opacity:0; transform:scale(1); }
-    66%{ opacity:0.7; transform:scale(1); }
-    100%{ opacity:0; transform:scale(1.45); }
-  }
+  .coach-dot:hover{ opacity:0.6; }
+  .coach-dot.is-active{ opacity:1; transform:scale(1.15); cursor:default; }
+  .coach-dot:focus-visible{ outline:1px solid #fff; outline-offset:3px; }
+
   .coach-card-title{
     font-size:clamp(22px, 2.2vw, 32px); font-weight:600;
     letter-spacing:-0.01em; line-height:1.15;
@@ -821,10 +856,10 @@
     .coach-title{ white-space:normal; font-size:clamp(34px, 8vw, 60px); }
   }
   @media (max-width:700px){
-    .divider-black{ padding:0 20px 56px; }
-    .coach-cards{ column-gap:18px; }
-    .coach-next{ width:40px; height:40px; }
+    .coach-pin{ padding:0 20px 56px; }
   }
+
+
 
   /* CAPABILITY — a static bento-style grid of 10 sport photos, each tile
      a different width and height. Explicit line-based placement (not
@@ -969,8 +1004,8 @@
 
 
 
-<!-- Actus logo mark (assets/actus_w_logo.svg), top-left (links home) -->
-<a class="site-logo" href="#top" aria-label="Actus — home">
+<!-- Actus logo mark (assets/actus_w_logo.svg), top-left (back to the black-screen pre-header) -->
+<a class="site-logo" href="#intro" aria-label="Actus — back to the start">
   <img src="assets/actus_w_logo.svg" alt="" width="44" height="44">
 </a>
 
@@ -1037,47 +1072,64 @@
      <div class="story-content">
       <div class="story-text-col">
         <div class="story-title-track">
-          <span class="story-title" data-rip-piece>Let it rip!</span>
+          <span class="story-title" data-rip-piece>Let it sense!</span>
         </div>
-        <span class="story-subtitle" data-rip-piece>Actus measures what matters. <span class="subtitle-glitch">Whoops,sorry to the other guys still guessing.</span></span>
+        <span class="story-subtitle" data-rip-piece>Actus measures what matters.</span>
       </div>
       <div class="story-gallery" id="storyGallery">
         <div class="story-gallery-stage">
           <div class="story-gallery-track" id="storyGalleryTrack">
-            <div class="story-gallery-tab"><video src="assets/F1.mp4" autoplay muted loop playsinline aria-label="Reads muscles"></video><span class="story-gallery-tab-label">Reads Muscles</span></div>
-            <div class="story-gallery-tab"><img src="https://images.unsplash.com/photo-1434494878577-86c23bcb06b9?auto=format&fit=crop&w=500&q=80" alt="ECG"><span class="story-gallery-tab-label">ECG</span></div>
-            <div class="story-gallery-tab"><img src="https://images.unsplash.com/photo-1550345332-09e3ac987658?auto=format&fit=crop&w=500&q=80" alt="Fatigue detection"><span class="story-gallery-tab-label">Fatigue Detection</span></div>
-            <div class="story-gallery-tab"><video src="assets/F2.mp4" autoplay muted loop playsinline aria-label="Form correction"></video><span class="story-gallery-tab-label">Form Correction</span></div>
-            <div class="story-gallery-tab"><img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=500&q=80" alt="Pose estimation"><span class="story-gallery-tab-label">Pose Estimation</span></div>
-            <div class="story-gallery-tab"><img src="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=500&q=80" alt="Rep count"><span class="story-gallery-tab-label">Rep Count</span></div>
-            <div class="story-gallery-tab"><img src="https://images.unsplash.com/photo-1548690312-e3b507d8c110?auto=format&fit=crop&w=500&q=80" alt="Coaches you"><span class="story-gallery-tab-label">Coaches You</span></div>
+            <div class="story-gallery-tab" data-desc="Train the muscles you mean to." data-feature="Surface EMG tracks your muscles through your skin, warning you the second you engage the wrong ones." data-icon="emg"><video src="assets/F1.mp4" autoplay muted loop playsinline aria-label="Muscle-specific optimization"></video><span class="story-gallery-tab-label">Muscle-Specific Optimization</span></div>
+            <div class="story-gallery-tab" data-desc="Clean form, every single rep." data-feature="Catches compensation and left/right imbalance mid-set, and nudges you back on track." data-icon="form"><video src="assets/F2.mp4" autoplay muted loop playsinline aria-label="Form correction"></video><span class="story-gallery-tab-label">Form Correction</span></div>
+            <div class="story-gallery-tab" data-desc="Every joint, tracked in motion." data-feature="Follows how your body moves through space, joint by joint — no camera needed." data-icon="pose"><video src="assets/F3.mp4" autoplay muted loop playsinline aria-label="Pose estimation"></video><span class="story-gallery-tab-label">Pose Estimation</span></div>
+            <div class="story-gallery-tab" data-desc="Know when to push, and when to stop." data-feature="Spots the drop in muscle output before you feel it, so you can end the set at the right moment." data-icon="fatigue"><img src="https://images.unsplash.com/photo-1550345332-09e3ac987658?auto=format&fit=crop&w=500&q=80" alt="Fatigue detection"><span class="story-gallery-tab-label">Fatigue Detection</span></div>
+            <div class="story-gallery-tab" data-title-before="And also, all the standard metrics." data-desc="Your heart, measured — not estimated." data-feature="A heart signal taken right from your arm, so effort and recovery come from real data instead of a guess." data-icon="ecg"><img src="https://images.unsplash.com/photo-1434494878577-86c23bcb06b9?auto=format&fit=crop&w=500&q=80" alt="ECG"><span class="story-gallery-tab-label">ECG</span></div>
+            <div class="story-gallery-tab" data-desc="Every rep counted for you." data-feature="Counts reps automatically, along with tempo, partial reps and range of motion." data-icon="reps"><img src="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=500&q=80" alt="Rep count"><span class="story-gallery-tab-label">Rep Count</span></div>
+            <div class="story-gallery-tab" data-desc="Every calorie, actually counted." data-feature="Estimates calories burned from your real muscle effort and heart rate, not just how much you move." data-icon="burn"><img src="https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=500&q=80" alt="Calorie burning"><span class="story-gallery-tab-label">Calorie Burn</span></div>
+            <!-- big title on its own scroll stop just before a tab (its data-title-before) -->
+            <p class="story-reel-interlude" id="storyReelInterlude" aria-live="polite"></p>
           </div>
         </div>
       </div>
      </div>
+     <!-- the focused tab's copy (filled from its data-desc / data-feature /
+          data-icon by updateReel): big line bottom-left, feature note bottom-right -->
+     <div class="story-reel-copy" id="storyReelCopy" aria-live="polite">
+       <p class="story-reel-desc"></p>
+       <div class="story-reel-feature">
+         <span class="story-reel-feature-icon" aria-hidden="true"></span>
+         <p class="story-reel-feature-text"></p>
+       </div>
+     </div>
     </div>
   </div>
-  <!-- Scroll length only: "Wear it." holds over the first, "Let it rip!"
+  <!-- Scroll length only: "Wear it." holds over the first, "Let it sense!"
        slides in from the right across the pinned stretch (see the
        story-rip script). -->
   <div class="story-step" data-bg-image="assets/photo1.jpeg"></div>
   <div class="story-step"></div>
-  <!-- Extra pinned scroll for the gallery: once "Let it rip!" has landed,
+  <!-- Extra pinned scroll for the gallery: once "Let it sense!" has landed,
        scrolling steps through the tabs one by one; after the last tab the
        section un-pins (height set by the gallery script). -->
   <div class="story-gallery-steps" id="storyGallerySteps" aria-hidden="true"></div>
 </section>
 
 <section class="divider-black">
+ <div class="coach-pin">
   <div class="divider-bg" aria-hidden="true">
     <!-- One video per feature, same order; the current one fades in and plays -->
-    <video class="is-active" src="assets/haptic1.mp4" autoplay muted loop playsinline></video>
+    <video class="is-active" src="assets/Hardware1.mp4" autoplay muted loop playsinline></video>
+    <video src="assets/haptic1.mp4" muted loop playsinline preload="auto"></video>
     <video src="assets/AI1.mp4" muted loop playsinline preload="auto"></video>
   </div>
   <div class="coach-stage">
     <span class="coach-title">And it coaches you in return!</span>
     <div class="coach-cards" id="coachCards">
       <article class="coach-card is-active">
+        <h3 class="coach-card-title">EMG &amp; IMU sensors</h3>
+        <p class="coach-card-text">Reads what your muscles are doing and how your body moves, together, in real time.</p>
+      </article>
+      <article class="coach-card">
         <h3 class="coach-card-title">Haptic system</h3>
        <p class="coach-card-text">Direct feedback on your movement to your tactile senses.</p>  <!--  //  Also counting your reps! -->
       </article>
@@ -1085,11 +1137,11 @@
         <h3 class="coach-card-title">Talkable AI!</h3>
         <p class="coach-card-text">An AI coach you can simply talk to through your earpods while practicing. </p> <!--  //  It will also optimize your training based on your performance and goals. -->
       </article>
-      <button class="coach-next" id="coachNext" type="button" aria-label="Next feature">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </button>
     </div>
   </div>
+  <!-- one dot per feature, filled in by the coach script -->
+  <div class="coach-dots" id="coachDots"></div>
+ </div>
 </section>
 
 <section class="panel" id="capability">
@@ -2055,7 +2107,7 @@
 </script>
 
 <script>
-  /* "Let it rip!" perspective carousel — all 7 feature categories. Every
+  /* "Let it sense!" perspective carousel — all 7 feature categories. Every
      tab gets a slot d = its distance from the focused tab: d=0 is the
      big focused tab at the left, d=1..VISIBLE-1 recede to the right
      (each smaller, dimmer, tilted a bit further away), d=-1 is the tab
@@ -2064,8 +2116,9 @@
      loops forever both ways with no clones — a tab only ever jumps
      across the row while it's fully transparent. Driven by page scroll:
      the story section stays pinned while you scroll through the tabs
-     (see updateGallery in the story script); clicking a receding tab
-     scrolls the page to it. */
+     (see updateGallery in the story script). Scroll is the only way
+     through — the gallery doesn't react to the mouse (pointer-events
+     stay off on it). */
   (function(){
     const track = document.getElementById('storyGalleryTrack');
     if (!track) return;
@@ -2081,24 +2134,32 @@
       // -1 .. n-2: one slot reserved on the left for the outgoing tab
       return ((i - focus + 1) % n + n) % n - 1;
     }
-    function layout(){
+    // carousel pose of tab i (also blended from by the story's focus reel)
+    function poseOf(i){
       const w = tabs[0].offsetWidth; // unscaled — transforms don't affect it
+      const d = slotOf(i);
+      let x, s, rot, opacity;
+      if (d < 0) {
+        x = -(w + GAP); s = 1; rot = 0; opacity = 0;
+      } else {
+        // Left edge of slot d = sum of the scaled widths+gaps before it
+        x = 0; s = 1;
+        for (let k = 0; k < d; k++) { x += (w + GAP) * s; s *= SHRINK; }
+        rot = -Math.min(d, 3) * TILT;
+        opacity = d < VISIBLE ? 1 : 0;
+      }
+      return { x, s, rot, opacity, bright: d > 0 ? 1 - Math.min(d, VISIBLE) * 0.1 : 1, z: d < 0 ? 0 : n - d };
+    }
+    function layout(){
+      // the focus reel drives the tabs itself while it's on
+      if (track.closest('.is-reel')) return;
       tabs.forEach((tab, i) => {
         const d = slotOf(i);
-        let x, s, rot, opacity;
-        if (d < 0) {
-          x = -(w + GAP); s = 1; rot = 0; opacity = 0;
-        } else {
-          // Left edge of slot d = sum of the scaled widths+gaps before it
-          x = 0; s = 1;
-          for (let k = 0; k < d; k++) { x += (w + GAP) * s; s *= SHRINK; }
-          rot = -Math.min(d, 3) * TILT;
-          opacity = d < VISIBLE ? 1 : 0;
-        }
-        tab.style.transform = `translateX(${x}px) scale(${s}) rotateY(${rot}deg)`;
-        tab.style.opacity = opacity;
-        tab.style.filter = d > 0 ? `brightness(${1 - Math.min(d, VISIBLE) * 0.1})` : '';
-        tab.style.zIndex = d < 0 ? 0 : n - d;
+        const p = poseOf(i);
+        tab.style.transform = `translateX(${p.x}px) scale(${p.s}) rotateY(${p.rot}deg)`;
+        tab.style.opacity = p.opacity;
+        tab.style.filter = d > 0 ? `brightness(${p.bright})` : '';
+        tab.style.zIndex = p.z;
         tab.dataset.slot = d;
         tab.classList.toggle('is-focused', d === 0);
         tab.classList.toggle('is-hidden', d < 0 || d >= VISIBLE);
@@ -2110,27 +2171,22 @@
       layout();
     }
 
-    // How much pinned scrolling each tab gets (the gallery-steps spacer at
-    // the end of the story section is sized from it)
-    const GALLERY_STEP_VH = 45;
+    // How much pinned scrolling the focus reel gets (the gallery-steps
+    // spacer at the end of the story section is sized from it): one unit
+    // to bring the reel in, one per tab change, and a short hold at the end
+    const GALLERY_STEP_VH = 55;
     const stepsEl = document.getElementById('storyGallerySteps');
-    if (stepsEl) stepsEl.style.height = `${(n - 1) * GALLERY_STEP_VH}vh`;
+    const interludes = tabs.filter((t, i) => i > 0 && t.dataset.titleBefore).length; // each is one more step
+    if (stepsEl) stepsEl.style.height = `${(n + interludes + 0.5) * GALLERY_STEP_VH}vh`;
 
-    // the story script drives the focus from scroll position
+    // the story script drives the focus reel from scroll position
     window.actusGallery = {
       count: n,
-      get focus(){ return focus; },
-      setFocus(i){
-        const f = ((i % n) + n) % n;
-        if (f !== focus) { focus = f; layout(); }
-      }
+      tabs,
+      track,
+      poseOf,
+      relayout: layout
     };
-    // clicking a receding tab scrolls the page to where that tab is focused
-    tabs.forEach((tab, i) => tab.addEventListener('click', () => {
-      const d = slotOf(i);
-      if (d > 0 && d < VISIBLE) window.dispatchEvent(new CustomEvent('actus:gallery-goto', { detail: i }));
-    }));
-
     // First paint without animating every tab in from the origin
     tabs.forEach(t => t.style.transition = 'none');
     layout();
@@ -2142,41 +2198,6 @@
     } else {
       window.addEventListener('resize', layout);
     }
-  })();
-</script>
-
-<script>
-  // Random-interval flicker for .subtitle-glitch — re-queries the DOM
-  // each tick rather than holding a reference, since the subtitle text
-  // (and this span along with it) gets replaced whenever the story
-  // crossfades to a different step; this way the loop just quietly
-  // no-ops while the phrase isn't currently on screen, and picks back
-  // up automatically once it is again.
-  (function(){
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    function flashOnce(el, ms){
-      el.classList.add('is-flashing');
-      setTimeout(() => el.classList.remove('is-flashing'), ms);
-    }
-    function scheduleFlicker(){
-      // Skewed toward short gaps (Math.random()*Math.random() biases
-      // low) but with occasional long, quiet stretches — a plain
-      // uniform range still reads as "on a timer" once you watch it for
-      // a bit; this doesn't.
-      const delay = 200 + Math.random() * Math.random() * 7000;
-      setTimeout(() => {
-        const el = document.querySelector('.subtitle-glitch');
-        if (el) {
-          flashOnce(el, 40 + Math.random() * 220);
-          // sometimes a quick second blip right on the heels of the first
-          if (Math.random() < 0.35) {
-            setTimeout(() => flashOnce(el, 30 + Math.random() * 150), 90 + Math.random() * 140);
-          }
-        }
-        scheduleFlicker();
-      }, delay);
-    }
-    scheduleFlicker();
   })();
 </script>
 
@@ -2229,22 +2250,34 @@
     setTimeout(typeTitleXlWord, 1800);
   }
 
-  /* Coach section: one feature at a time ("Haptic system", then "Talkable
-     AI!", and around again; the arrow beside it skips to the next),
-     switching every COACH_SWITCH_MS together with
-     its background video, which plays normally (from the start each time
-     it comes up). The timer only runs while the section is on screen. */
+  /* Coach section: one feature at a time ("EMG & IMU sensors", then
+     "Haptic system", then "Talkable AI!"), each with its background
+     video, which plays from the start each time it comes up. Driven by
+     scroll: the section pins once it fills the screen, each scroll moves
+     on to the next feature (back up goes back), and after the last one
+     the page carries on. The dots at the bottom jump to a feature. */
   (function(){
     const wrap = document.getElementById('coachCards');
     if (!wrap) return;
-    const COACH_SWITCH_MS = 10000;
     const cards = Array.from(wrap.querySelectorAll('.coach-card'));
-    // Background videos, one per feature in the same order (haptic, AI).
+    // Background videos, one per feature in the same order (sensors, haptic, AI).
     const videos = Array.from(document.querySelectorAll('.divider-bg video'));
     let current = 0;
+    // one dot per feature at the bottom; the current one is the bright one
+    const dotsEl = document.getElementById('coachDots');
+    const dots = cards.map((card, i) => {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'coach-dot' + (i === 0 ? ' is-active' : '');
+      dot.setAttribute('aria-label', card.querySelector('.coach-card-title').textContent);
+      if (dotsEl) dotsEl.appendChild(dot);
+      return dot;
+    });
     function activate(idx){
+      if (idx === current) return;
       current = idx;
       cards.forEach((card, i) => card.classList.toggle('is-active', i === idx));
+      dots.forEach((dot, i) => dot.classList.toggle('is-active', i === idx));
       videos.forEach((video, i) => {
         const on = i === idx;
         video.classList.toggle('is-active', on);
@@ -2254,33 +2287,121 @@
           if (p && p.catch) p.catch(() => {}); // ignore autoplay refusals
         } else {
           // pause once it has faded out (matches the CSS opacity transition)
-          setTimeout(() => { if (!video.classList.contains('is-active')) video.pause(); }, 800);
+          setTimeout(() => { if (!video.classList.contains('is-active')) video.pause(); }, 400);
         }
       });
     }
 
     const section = wrap.closest('.divider-black');
-    let timer = null;
-    function startTimer(){
-      if (timer) return;
-      timer = setInterval(() => activate((current + 1) % cards.length), COACH_SWITCH_MS);
+    if (section) section.style.setProperty('--coach-steps', cards.length - 1);
+    // Page-scroll position where feature i is up: the section's top for
+    // the first, the end of its pinned stretch for the last, evenly between
+    function stopAt(i){
+      const top = section.getBoundingClientRect().top + window.scrollY;
+      const pinned = Math.max(1, section.offsetHeight - window.innerHeight);
+      return top + i / Math.max(1, cards.length - 1) * pinned;
     }
-    function stopTimer(){ clearInterval(timer); timer = null; }
-    // the arrow beside the feature brings in the next one (and restarts the countdown)
-    const nextBtn = document.getElementById('coachNext');
-    if (nextBtn) nextBtn.addEventListener('click', () => {
-      activate((current + 1) % cards.length);
-      if (timer) { stopTimer(); startTimer(); }
-    });
+    // How far (fraction of the scroll between two features) you have to
+    // scroll toward the next one before it switches — small, so the new
+    // feature + video come in right as you start scrolling, not half-way
+    const SWITCH_AT = 0.06;
+    let lastUpdateY = window.scrollY, heading = 1;
+    function update(){
+      if (!section) return;
+      const y = window.scrollY;
+      if (Math.abs(y - lastUpdateY) > 1) heading = y > lastUpdateY ? 1 : -1;
+      lastUpdateY = y;
+      const first = stopAt(0), last = stopAt(cards.length - 1);
+      const t = Math.min(1, Math.max(0, (y - first) / Math.max(1, last - first)));
+      const x = t * (cards.length - 1); // 0 = first feature … n-1 = last
+      // heading down: the next one as soon as you're SWITCH_AT past a
+      // feature; heading up: the previous one likewise
+      activate(heading > 0 ? Math.ceil(x - SWITCH_AT) : Math.floor(x + SWITCH_AT));
+    }
+    update();
+    // A brief hold on each feature: whenever scrolling reaches or runs
+    // over one on the way to another, the page stops right on it, and
+    // scrolling on the same way is ignored for FEATURE_HOLD_MS — so a fast
+    // scroll can't fly past a feature without it registering. Turning back
+    // is never held, and scrolling out of the section past the first /
+    // last feature never stops. (Not during a dot click's glide.)
+    const FEATURE_HOLD_MS = 100;
+    let holdLastY = window.scrollY;
+    function holdOnFeatures(){
+      const y = window.scrollY, prev = holdLastY;
+      holdLastY = y;
+      if (!section || y === prev || (window.actusGliding && window.actusGliding())) return;
+      const ys = cards.map((c, i) => stopAt(i));
+      const hit = ys.map((v, i) => i)
+        // reached or crossed since last time — but not just moving off one
+        // you were already resting on (give or take a few px of rounding)
+        .filter(i => (prev - ys[i]) * (y - ys[i]) <= 0 && Math.abs(prev - ys[i]) > 4)
+        .sort((a, b) => Math.abs(ys[a] - prev) - Math.abs(ys[b] - prev))[0];        // the first one on the way
+      if (hit === undefined || !window.actusHoldAt) return;
+      const dir = y > prev ? 1 : -1;
+      // heading out of the section past the first / last feature: no stop
+      if (dir > 0 ? hit === cards.length - 1 : hit === 0) return;
+      window.actusHoldAt(Math.round(ys[hit]), FEATURE_HOLD_MS, dir);
+      holdLastY = window.scrollY;
+    }
+    window.addEventListener('scroll', () => { holdOnFeatures(); update(); }, { passive: true });
+    window.addEventListener('resize', update);
+
+    // No resting between two features — but scrolling itself is never
+    // held back: the page follows the wheel / finger freely (a hard
+    // scroll runs through several features at once), and only once it
+    // has actually come to a stop in between does it ease on to the next
+    // feature in the direction you were going. The ease uses the page's
+    // own wheel smoothing, so scrolling again during it just adds on.
+    const COACH_SETTLE_MS = 120; // this long without scrolling = stopped
+    const EASE_TOL = 2;          // px — counts as resting on a feature
+    let dir = 1, lastInputAt = 0, touching = false, touchY = null, lastY = window.scrollY, settleTimer = null;
+    window.addEventListener('wheel', (e) => {
+      if (e.deltaY) { dir = e.deltaY > 0 ? 1 : -1; lastInputAt = performance.now(); }
+    }, { passive: true });
+    window.addEventListener('touchstart', (e) => { touching = true; touchY = e.touches[0].clientY; }, { passive: true });
+    window.addEventListener('touchmove', (e) => {
+      const y = e.touches[0].clientY;
+      if (touchY !== null && Math.abs(y - touchY) > 2) { dir = y < touchY ? 1 : -1; lastInputAt = performance.now(); }
+      touchY = y;
+    }, { passive: true });
+    window.addEventListener('touchend', () => { touching = false; touchY = null; armSettle(); }, { passive: true });
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY;
+      // no wheel / finger behind it (scrollbar, keyboard): go by the page's own movement
+      if (performance.now() - lastInputAt > 400 && Math.abs(y - lastY) > 6) dir = y > lastY ? 1 : -1;
+      lastY = y;
+      armSettle();
+    }, { passive: true });
+    function armSettle(){
+      clearTimeout(settleTimer);
+      settleTimer = setTimeout(settle, COACH_SETTLE_MS);
+    }
+    function settle(){
+      if (!section || touching) return;
+      if (window.actusGliding && window.actusGliding()) return; // a timed glide is landing somewhere on purpose
+      const ys = cards.map((c, i) => stopAt(i));
+      const y = window.scrollY;
+      if (y <= ys[0] + EASE_TOL || y >= ys[ys.length - 1] - EASE_TOL) return; // not in between
+      if (ys.some(v => Math.abs(y - v) <= EASE_TOL)) return; // resting on a feature
+      const next = dir > 0 ? ys.find(v => v > y) : [...ys].reverse().find(v => v < y);
+      if (next !== undefined) easeTo(Math.round(next));
+    }
+    function easeTo(y, nav = false){
+      if (window.actusSmoothTo) window.actusSmoothTo(y, nav);
+      else window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+
+    function goTo(i){ easeTo(Math.round(stopAt(i)), true); }
+    // a dot scrolls straight to its feature
+    dots.forEach((dot, i) => dot.addEventListener('click', () => { if (i !== current) goTo(i); }));
     if (section) {
       new IntersectionObserver((entries) => {
         entries.forEach(e => {
           if (e.isIntersecting) {
-            startTimer();
             const v = videos[current];
             if (v && v.paused) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
           } else {
-            stopTimer();
             videos.forEach(v => v.pause());
           }
         });
@@ -2348,7 +2469,7 @@
   const panStep = steps[0]; // "Wear it." — drives the entrance + main pan
   const lastPanStep = steps[steps.length - 1]; // "Move it." — drives the fast exit
   const storyEl2 = document.getElementById('story');
-  // The pinned story = the "Wear it." / "Let it rip!" part, then the
+  // The pinned story = the "Wear it." / "Let it sense!" part, then the
   // gallery's own stretch (#storyGallerySteps). Everything timed as a
   // fraction of the pin (WEAR_OUT, RIP_*, the photo pan, the glide)
   // measures the first part only, so the gallery stretch doesn't slow it.
@@ -2357,6 +2478,8 @@
     return Math.max(1, storyHeight - window.innerHeight - (gallerySteps ? gallerySteps.offsetHeight : 0));
   }
   const EXIT_SPEED_FACTOR = 0.35; // exit pan completes within this fraction of the last step's own scroll-out distance — the smaller, the faster
+  // 0..1: the focus reel pushing the photo the rest of the way out (set by updateReel)
+  let reelBgOut = 0;
   function updateBgPan(){
     if (!travelingBg || !panStep || !lastPanStep || !storyEl2) return;
     const storyRect = storyEl2.getBoundingClientRect();
@@ -2376,7 +2499,7 @@
       exitProgress = Math.min(1, Math.max(0, (window.innerHeight - storyRect.bottom) / (window.innerHeight * EXIT_SPEED_FACTOR)));
     }
 
-    const panTransform = `translateX(${-50 * p - 50 * exitProgress}%)`;
+    const panTransform = `translateX(${-50 * p - 50 * Math.max(exitProgress, reelBgOut)}%)`;
     travelingBg.style.transform = panTransform;
     travelingBg.style.clipPath = `inset(${(1 - enterProgress) * 100}% 0 0 0)`;
 
@@ -2403,10 +2526,10 @@
     el.style.transition = `transform ${duration}ms cubic-bezier(.33,.1,.2,1), opacity ${Math.round(duration*0.85)}ms ease`;
   }
 
-  /* "Wear it." → "Let it rip!", tied straight to scroll (no timed
+  /* "Wear it." → "Let it sense!", tied straight to scroll (no timed
      transition): across the pinned stretch — the same 0..1 progress the
      arm photo pans on — "Wear it." drifts left and fades while the
-     "Let it rip!" pieces slide in from off-screen right, one after
+     "Let it sense!" pieces slide in from off-screen right, one after
      another: title, subtitle, then the gallery tabs (focused first, then
      each receding one). Each piece decelerates into its final spot; the
      last lands at RIP_DONE, and the finished view then holds for the
@@ -2444,22 +2567,35 @@
     }
 
     const pieces = ripPieces();
-    let leadIn = false;
     pieces.forEach((el, k) => {
       const t = reduce ? (p > 0.4 ? 1 : 0)
         : easeOut(clamp01((p - RIP_START - k * RIP_STAGGER) / RIP_PIECE));
-      if (k === 2) leadIn = t > 0.97; // the focused tab has landed
       el.style.translate = t >= 1 ? '' : `${(1 - t) * travel}px 0`;
     });
-    // clickable as soon as the focused tab is in place — not only once the
-    // smallest trailing tabs have finished sliding in too
-    ripLayer.classList.toggle('is-arrived', leadIn);
     updateGallery(rect, pinnedLength);
+    updateBgPan(); // picks up reelBgOut
   }
-  /* Scroll-driven gallery: from the moment every "Let it rip!" piece has
-     landed to the end of the pin (gallery stretch included), the scroll
-     is split evenly between the tabs — scrolling down steps to the next
-     one, up steps back; after the last tab the section un-pins. */
+  /* Focus reel: from the moment every "Let it sense!" piece has landed to
+     the end of the pin (gallery stretch included), scroll drives — in
+     REEL units (one for the way in, one per tab change, a short hold):
+     1) In (m 0→1): the arm photo slides the rest of the way out to the
+        left; "Let it sense!" shrinks over to the left edge but stays; the
+        first tab grows into the middle of the screen, the next one peeking
+        in small from the right edge. Its copy fades in along the bottom:
+        a big line bottom-left, a feature note with its icon bottom-right.
+     2) Tabs (f 0→n-1): each step the focused tab slides out past the left
+        edge while the next grows in from the right to take its place.
+        "Let it sense!" leaves to the left along with the first tab.
+     Every in-between position is a straight blend, scrubbed by scroll
+     (and snapped to the nearest whole step, see settle() below). */
+  const REEL_IN = 1, REEL_HOLD = 0.5;
+  const REEL_BIG_H = 0.6;        // focused tab height, fraction of the screen height
+  const REEL_PEEK_SCALE = 0.62;  // the next tab, waiting at the right edge, vs the focused one
+  const REEL_PEEK_SHOW = 0.45;   // how much of the waiting tab shows
+  const REEL_NARROW_TOP = 200;   // phones: where the focused tab's top sits (under "Let it sense!"; the copy goes below it)
+  const REEL_TEXT_SCALE = 0.55;  // "Let it sense!" while it waits at the left
+  const easeInOut = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const mix = (a, b, t) => a + (b - a) * t;
   function galleryRange(storyTop, coreLen){ // page-scroll positions [start, end]
     const lastPiece = ripPieces().length - 1;
     return {
@@ -2467,26 +2603,189 @@
       end: storyTop + coreLen + (gallerySteps ? gallerySteps.offsetHeight : 0)
     };
   }
+  // The reel's sequence, one stop each: every tab, with a title item
+  // slotted in before any tab that has a data-title-before. A title moves
+  // through the reel just like a tab (peeking in at the right, centred,
+  // then out left). f = position along this sequence.
+  function reelItems(){
+    const g = window.actusGallery, items = [];
+    if (g) g.tabs.forEach((t, i) => {
+      if (i > 0 && t.dataset.titleBefore) items.push({ title: t.dataset.titleBefore });
+      items.push({ tab: i });
+    });
+    return items.length ? items : [{ tab: 0 }];
+  }
+  function reelUnits(){ return REEL_IN + (reelItems().length - 1) + REEL_HOLD; }
+  // page-scroll position of reel unit u (0 = reel not started, REEL_IN = first tab in focus)
+  function reelScrollAt(r, u){ return r.start + u / reelUnits() * (r.end - r.start); }
+  // one small line icon per feature (picked by a tab's data-icon)
+  const REEL_ICONS = {
+    emg: '<path d="M2 12h4l2-6 3 12 3-9 2 5 2-2h4"/>',
+    ecg: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/><path d="M5 12h3l1.5-2 2 4 1.5-2H19"/>',
+    fatigue: '<rect x="3" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 10v4"/>',
+    form: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>',
+    pose: '<circle cx="12" cy="4.5" r="1.8"/><path d="M12 7v6M12 13l-3.5 7M12 13l3.5 7M6 9.5l6-1 6 1"/>',
+    reps: '<path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>',
+    burn: '<path d="M12 22c4 0 7-2.7 7-6.8 0-3.6-2.4-5.9-4.2-8.2-.4 1.9-1.3 3.3-2.6 3.9.2-3.3-1.3-6.4-4-8.9.2 3.6-3.2 6.4-3.2 10.9C5 18.8 8 22 12 22z"/><path d="M12 22c-1.8 0-3-1.2-3-3 0-1.9 1.6-3 2.4-4.6.9 1.4 3.6 2.6 3.6 4.6 0 1.8-1.2 3-3 3z"/>'
+  };
+  const reelInterlude = document.getElementById('storyReelInterlude');
+  const TITLE_PEEK_SHOW = 0.45;  // how much of a title shows while it waits at the right edge
+  const reelCopy = document.getElementById('storyReelCopy');
+  const reelDesc = reelCopy && reelCopy.querySelector('.story-reel-desc');
+  const reelFeature = reelCopy && reelCopy.querySelector('.story-reel-feature');
+  const ripTextCol = ripLayer && ripLayer.querySelector('.story-text-col');
+  let reelOn = false, reelCopyIdx = -1;
+  let titleW = 0, titleWKey = ''; // the title's own (unscaled) text width, and what it was measured for
   function updateGallery(rect, coreLen){
     const g = window.actusGallery;
     if (!g) return;
     const r = galleryRange(rect.top + window.scrollY, coreLen);
-    const prog = clamp01((window.scrollY - r.start) / Math.max(1, r.end - r.start));
-    g.setFocus(Math.min(g.count - 1, Math.floor(prog * g.count)));
+    const u = clamp01((window.scrollY - r.start) / Math.max(1, r.end - r.start)) * reelUnits();
+    const m = easeInOut(clamp01(u / REEL_IN));
+    // one scroll unit per item, eased within each step
+    const fl = Math.min(reelItems().length - 1, Math.max(0, u - REEL_IN));
+    const f = Math.floor(fl) + easeInOut(fl - Math.floor(fl));
+    updateReel(g, m, f);
   }
-  // a click on a receding tab: scroll to the middle of that tab's stretch
-  window.addEventListener('actus:gallery-goto', (e) => {
-    const g = window.actusGallery;
-    if (!g || !storyEl2) return;
-    const rect = storyEl2.getBoundingClientRect();
-    const r = galleryRange(rect.top + window.scrollY, storyCoreLen(rect.height));
-    window.scrollTo({ top: r.start + (e.detail + 0.5) / g.count * (r.end - r.start), behavior: 'smooth' });
-  });
+  function updateReel(g, m, f){
+    reelBgOut = m;
+    if (m <= 0) {
+      if (reelOn) {
+        reelOn = false;
+        ripLayer.classList.remove('is-reel');
+        g.relayout();
+      }
+      if (ripTextCol) { ripTextCol.style.translate = ''; ripTextCol.style.scale = ''; }
+      if (reelCopy) { reelDesc.style.opacity = '0'; reelFeature.style.opacity = '0'; }
+      if (reelInterlude) reelInterlude.style.opacity = '0';
+      return;
+    }
+    if (!reelOn) { reelOn = true; ripLayer.classList.add('is-reel'); }
+
+    // Everything measured against the rip layer (= the pinned screen), so
+    // it all rides along when the section finally scrolls away
+    const box = ripLayer.getBoundingClientRect();
+    const tr = g.track.getBoundingClientRect();
+    const w = g.tabs[0].offsetWidth, h = g.tabs[0].offsetHeight;
+    const narrow = box.width <= 900;
+    // phones: smaller, and up under "Let it sense!" so the copy fits below
+    const bigH = Math.min(box.height * (narrow ? 0.42 : REEL_BIG_H), box.width * 0.62 / 0.72);
+    const big = bigH / h, peek = big * REEL_PEEK_SCALE;
+    const cy = narrow ? box.top + REEL_NARROW_TOP + bigH / 2 : box.top + box.height / 2;
+    const baseLeft = tr.left + 4, baseCy = tr.top + tr.height / 2; // a tab's untransformed spot (left:4px, centered)
+    // Reel keyframes by distance from focus: -1 gone left, 0 centre, 1 peeking right, 2 gone right
+    const keys = [
+      { d: -1, cx: box.left - w * big / 2 - 60, s: big, br: 0.7 },
+      { d: 0, cx: box.left + box.width / 2, s: big, br: 1 },
+      { d: 1, cx: box.right - w * peek * (REEL_PEEK_SHOW - 0.5), s: peek, br: 0.6 },
+      { d: 2, cx: box.right + w * peek * 0.8, s: peek, br: 0.5 }
+    ];
+    function reelPose(d){
+      const dc = Math.min(2, Math.max(-1, d));
+      const i = Math.min(keys.length - 2, Math.floor(dc + 1));
+      const a = keys[i], b = keys[i + 1], t = dc - a.d;
+      const s = mix(a.s, b.s, t);
+      return {
+        x: mix(a.cx, b.cx, t) - s * w / 2 - baseLeft,
+        y: cy - baseCy,
+        s, rot: 0, br: mix(a.br, b.br, t),
+        opacity: clamp01(Math.min(d + 2, 3 - d)) // fades out beyond either end
+      };
+    }
+    // where each item sits in the sequence (titles take a slot of their own)
+    const items = reelItems();
+    const seqOfTab = [];
+    let titleSeq = -1, titleText = '';
+    items.forEach((it, k) => {
+      if (it.title !== undefined) {
+        if (titleSeq < 0 || Math.abs(k - f) < Math.abs(titleSeq - f)) { titleSeq = k; titleText = it.title; } // the nearest one
+      } else seqOfTab[it.tab] = k;
+    });
+    // stacking: nearer the focus = higher
+    const zOf = k => 200 - Math.round(Math.abs(k - f) * 20) + (k > f ? 1 : 0);
+    g.tabs.forEach((tab, i) => {
+      const c = g.poseOf(i), rp = reelPose(seqOfTab[i] - f);
+      const x = mix(c.x, rp.x, m), y = mix(0, rp.y, m), s = mix(c.s, rp.s, m);
+      tab.style.transform = `translateX(${x}px) translateY(${y}px) scale(${s}) rotateY(${mix(c.rot, 0, m)}deg)`;
+      tab.style.opacity = mix(c.opacity, rp.opacity, m);
+      tab.style.filter = `brightness(${mix(c.bright, rp.br, m)})`;
+      tab.style.zIndex = m > 0.5 ? zOf(seqOfTab[i]) : c.z;
+    });
+    // A title item: same path as a tab — waiting small at the right edge
+    // (part of it showing), centred when it's up, then out past the left
+    if (reelInterlude) {
+      if (titleSeq < 0) reelInterlude.style.opacity = '0';
+      else {
+        const key = titleText + '|' + box.width;
+        if (titleWKey !== key) { // measure the text itself (it's centred in a wider box)
+          reelInterlude.textContent = titleText;
+          const prev = reelInterlude.style.scale;
+          reelInterlude.style.scale = '1';
+          const range = document.createRange();
+          range.selectNodeContents(reelInterlude);
+          titleW = range.getBoundingClientRect().width;
+          reelInterlude.style.scale = prev;
+          titleWKey = key;
+        }
+        const sp = REEL_PEEK_SCALE;
+        const tkeys = [
+          { d: -1, cx: box.left - titleW / 2 - 60, s: 1 },
+          { d: 0, cx: box.left + box.width / 2, s: 1 },
+          { d: 1, cx: box.right - titleW * sp * (TITLE_PEEK_SHOW - 0.5), s: sp },
+          { d: 2, cx: box.right + titleW * sp / 2 + 60, s: sp }
+        ];
+        const d = titleSeq - f, dc = Math.min(2, Math.max(-1, d));
+        const j = Math.min(tkeys.length - 2, Math.floor(dc + 1));
+        const ka = tkeys[j], kb = tkeys[j + 1], t = dc - ka.d;
+        reelInterlude.style.left = `${mix(ka.cx, kb.cx, t) - tr.left}px`;
+        reelInterlude.style.top = `${cy - tr.top}px`;
+        reelInterlude.style.scale = String(mix(ka.s, kb.s, t));
+        reelInterlude.style.opacity = String(clamp01(Math.min(d + 2, 3 - d)) * m);
+        reelInterlude.style.zIndex = String(zOf(titleSeq));
+      }
+    }
+
+    // "Let it sense!": over to the left edge (smaller) on the way in, then
+    // out past the left edge with the first tab
+    if (ripTextCol) {
+      const col = ripTextCol, content = col.parentElement;
+      const left = col.offsetLeft + content.offsetLeft, top = col.offsetTop + content.offsetTop;
+      const restX = 32 - left, restY = narrow ? 92 - top : 0; // phones: up top, under the nav
+      const out = easeInOut(clamp01(f));
+      const goneX = -left - col.offsetWidth * REEL_TEXT_SCALE - 60;
+      col.style.translate = `${mix(0, restX, m) + mix(0, goneX - restX, out)}px ${mix(0, restY, m)}px`;
+      col.style.scale = String(mix(1, REEL_TEXT_SCALE, m));
+    }
+
+    // the focused tab's copy: fades out as soon as the tab starts moving
+    // and back in (with the new text) once the next one lands — the big
+    // line rising in, the feature note a beat behind it
+    const focusSeq = Math.round(f);
+    const focusIdx = items[focusSeq] && items[focusSeq].tab; // undefined while a title is up — no copy then
+    if (reelCopy) {
+      if (focusIdx !== undefined && focusIdx !== reelCopyIdx) {
+        reelCopyIdx = focusIdx;
+        const d = g.tabs[focusIdx].dataset;
+        reelDesc.textContent = d.desc || '';
+        reelFeature.querySelector('.story-reel-feature-text').textContent = d.feature || '';
+        reelFeature.querySelector('.story-reel-feature-icon').innerHTML = REEL_ICONS[d.icon]
+          ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${REEL_ICONS[d.icon]}</svg>` : '';
+      }
+      // room beside the focused tab, minus the page gutter and a gap
+      const gutter = Math.max(40, (box.width - 1300) / 2 + 40);
+      reelCopy.style.setProperty('--reel-side', `${Math.max(160, (box.width - w * big) / 2 - gutter - 40)}px`);
+      const off = focusIdx === undefined ? 1 : Math.abs(f - focusSeq); // a title: no copy
+      const settled = 1 - clamp01(off * 3);
+      const late = 1 - clamp01(off * 4.5);
+      reelDesc.style.opacity = String(m * m * settled);
+      reelDesc.style.translate = `0 ${(1 - settled) * 24}px`;
+      reelFeature.style.opacity = String(m * m * late);
+      reelFeature.style.translate = `0 ${(1 - late) * 16}px`;
+    }
+  }
   updateRip();
   window.addEventListener('scroll', updateRip, { passive: true });
   window.addEventListener('resize', updateRip);
-  // The carousel re-orders tabs when it moves; keep the slide-in in sync
-  if (ripLayer) ripLayer.addEventListener('click', () => requestAnimationFrame(updateRip));
 
   /* First entry into the section: show just the background for a
      beat, then reveal the first title with the normal rise-in. */
@@ -2530,7 +2829,7 @@
   // normal again straight away. Touch / keyboard / the scrollbar are
   // caught by the "settle" glide further down instead.
   const INTRO_GLIDE_MS = 1500;   // full black → white transition
-  // The same timed glide for the "Wear it." → "Let it rip!" switch: once
+  // The same timed glide for the "Wear it." → "Let it sense!" switch: once
   // "Wear it." is in place, a scroll down plays the whole switch (up plays
   // it back) over STORY_GLIDE_MS, on the same motion curve.
   const STORY_GLIDE_MS = 1500;
@@ -2596,7 +2895,7 @@
     const top = introWrapEl.getBoundingClientRect().top + window.scrollY;
     return { top, end: top + introSpacerEl.offsetHeight };
   }
-  // "Wear it." fully shown (top) … every "Let it rip!" piece landed (end)
+  // "Wear it." fully shown (top) … every "Let it sense!" piece landed (end)
   function storyBounds(){
     if (!ripLayer || !storyEl2) return null;
     const top = storyEl2.getBoundingClientRect().top + window.scrollY;
@@ -2609,6 +2908,31 @@
   }
   // glide to `to`; `back` is the other end (a turn-around heads there);
   // fullMs = how long the whole stretch takes (a partial one, proportionally less)
+  // A click's own destination (a gallery tab, a coach dot) while the page
+  // is easing there: no snapping may redirect it on the way. Cleared on
+  // arrival, or as soon as you scroll yourself.
+  let navTo = null;
+  window.actusGliding = () => !!introGlide || navTo !== null;
+  // ease to y with the plain wheel smoothing, so scrolling during it
+  // simply adds on; `nav` = a click's destination (see navTo)
+  // the coach section's hold on a feature: stop dead at y (dropping any
+  // queued scrolling) and, for ms, ignore the wheel heading on in dir
+  // (the other way is never held)
+  let wheelLockUntil = 0, wheelLockDir = 0;
+  window.actusHoldAt = function(y, ms, dir){
+    introGlide = null; navTo = null; glidePush = 0;
+    currentScroll = targetScroll = y; // a running smooth-scroll frame now just lands here
+    window.scrollTo(0, y);
+    wheelLockUntil = performance.now() + ms;
+    wheelLockDir = dir;
+  };
+  window.actusSmoothTo = function(y, nav = false){
+    if (introGlide) return;
+    currentScroll = window.scrollY;
+    targetScroll = clamp(y, 0, maxScroll());
+    navTo = nav ? targetScroll : null;
+    if (!ticking) { ticking = true; requestAnimationFrame(smoothScrollTick); }
+  };
   function startIntroGlide(to, back, fullMs, hurried = false){
     const from = window.scrollY;
     const ms = Math.max(400, fullMs * Math.abs(to - from) / Math.max(1, Math.abs(to - back)));
@@ -2652,6 +2976,8 @@
 
   window.addEventListener('wheel', (e) => {
     e.preventDefault();
+    if (performance.now() < wheelLockUntil && Math.sign(e.deltaY) === wheelLockDir) return; // holding on a coach feature
+    if (e.deltaY) navTo = null; // you're scrolling yourself again
     const ib = introBounds();
     if (introGlide) {
       // mid-glide: the other way turns it around; the same way lets it
@@ -2692,17 +3018,36 @@
       currentScroll = targetScroll;
       window.scrollTo(0, currentScroll);
       ticking = false;
+      navTo = null;
       return;
     }
     window.scrollTo(0, currentScroll);
     requestAnimationFrame(smoothScrollTick);
   }
 
-  /* No resting halfway between "Wear it." and "Let it rip!": if scrolling
+  /* In-page links (logo, Home, nav, Pre-order): drop whatever scrolling
+     is still queued up — wheel smoothing or a glide — before jumping,
+     otherwise it drags the page straight back and the click looks dead. */
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest && e.target.closest('a[href^="#"]');
+    if (!link || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const hash = link.getAttribute('href');
+    const target = hash.length > 1 && document.getElementById(decodeURIComponent(hash.slice(1)));
+    if (!target) return;
+    e.preventDefault();
+    introGlide = null;
+    glidePush = 0;
+    const y = clamp(target.getBoundingClientRect().top + window.scrollY, 0, maxScroll());
+    currentScroll = targetScroll = y; // a running smooth-scroll frame now just lands here
+    window.scrollTo(0, y);
+    if (location.hash !== hash) history.pushState(null, '', hash);
+  });
+
+  /* No resting halfway between "Wear it." and "Let it sense!": if scrolling
      comes to a stop while both are partly on screen (anywhere between
-     "Wear it." starting to fade and the last "Let it rip!" piece landing),
+     "Wear it." starting to fade and the last "Let it sense!" piece landing),
      glide on to whichever side you were heading toward — down finishes
-     "Let it rip!", up returns to "Wear it.". Only that in-between zone
+     "Let it sense!", up returns to "Wear it.". Only that in-between zone
      snaps; everywhere else scrolling stays fully free. The glide reuses
      the smooth-scroll easing above, so it feels like the rest of the page. */
   (function(){
@@ -2736,8 +3081,8 @@
       return {
         toScroll: p => top + p * pinnedLength,
         p: (window.scrollY - top) / pinnedLength,
-        start: WEAR_OUT[0],                                   // "Wear it." fully shown, nothing of "Let it rip!" yet
-        end: RIP_START + lastPiece * RIP_STAGGER + RIP_PIECE  // every "Let it rip!" piece landed
+        start: WEAR_OUT[0],                                   // "Wear it." fully shown, nothing of "Let it sense!" yet
+        end: RIP_START + lastPiece * RIP_STAGGER + RIP_PIECE  // every "Let it sense!" piece landed
       };
     }
     // Same for the black-screen intro: no resting half-way between the
@@ -2751,16 +3096,38 @@
       const pinnedLength = Math.max(1, introSpacer.offsetHeight);
       return { toScroll: p => top + p * pinnedLength, p: (window.scrollY - top) / pinnedLength };
     }
+    // Focus reel: no resting half-way between two tabs (or half-way in) —
+    // on to the next whole step in the direction you were heading
+    function reelSnap(){
+      const g = window.actusGallery;
+      if (!g) return null;
+      const rect = storyEl2.getBoundingClientRect();
+      const r = galleryRange(rect.top + window.scrollY, storyCoreLen(rect.height));
+      const y = window.scrollY, tol = 2;
+      const stops = [0];
+      for (let k = 0; k < reelItems().length; k++) stops.push(REEL_IN + k);
+      const ys = stops.map(u => reelScrollAt(r, u));
+      if (y <= ys[0] + tol || y >= ys[ys.length - 1] - tol) return null;
+      if (ys.some(s => Math.abs(y - s) <= tol)) return null; // resting on a step
+      const next = lastDir > 0 ? ys.find(s => s > y) : [...ys].reverse().find(s => s < y);
+      return next === undefined ? null : Math.round(next);
+    }
     function settle(){
-      if (touching || panReduceMotion.matches) return;
+      // a timed glide is already taking the page somewhere on purpose
+      // (the intro, the story switch) — let it land
+      if (touching || panReduceMotion.matches || introGlide || navTo !== null) return;
       let target;
       const iz = introZone();
       if (INTRO_AUTO_GLIDE && iz && iz.p > EDGE && iz.p < 1 - EDGE) {
         target = Math.round(iz.toScroll(lastDir > 0 ? 1 : 0)); // 1 = white hero, 0 = black screen
       } else {
         const z = zone();
-        if (z.p <= z.start + EDGE || z.p >= z.end - EDGE) return; // not in between
-        target = Math.round(z.toScroll(lastDir > 0 ? z.end : z.start));
+        if (z.p > z.start + EDGE && z.p < z.end - EDGE) {
+          target = Math.round(z.toScroll(lastDir > 0 ? z.end : z.start));
+        } else {
+          target = reelSnap();
+          if (target === null) return; // not in between
+        }
       }
       currentScroll = window.scrollY;
       targetScroll = target;
